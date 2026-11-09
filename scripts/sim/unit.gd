@@ -94,6 +94,7 @@ func _init(world, class_id: String, team: String) -> void:
 	c_turn = cls.get("turn", 2.0)
 	rudder_rate = cls.get("rudder_rate", 2.5)
 	plant = SimPlant.new(cls["plant"], "su" if navy == "su" else "us")
+	plant.rng.seed = world.rng.randi()
 	var p_w: float = float(plant.shp) * 745.7 * 0.55
 	var thrust := p_w / max_speed
 	_kacc = thrust / (disp * 1000.0 * 1.08) / (max_speed * max_speed)

@@ -331,7 +331,7 @@ func shell_collide(m, p0: Vector3, p1: Vector3):
 	if p1.y > 60.0 and p0.y > 60.0:
 		return null
 	for u in units:
-		if not u.alive() or (u.is_sub and u.depth > 6.0):
+		if not u.alive() or (u.is_sub and u.depth > 6.0) or u == m.shooter:
 			continue
 		var c: Vector3 = u.pos
 		if U.flat_dist(c, p1) > u.L * 0.7 + 30.0:

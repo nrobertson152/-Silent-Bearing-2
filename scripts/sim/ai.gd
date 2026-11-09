@@ -34,7 +34,7 @@ func _init(unit, world, m := "patrol") -> void:
 	w = world
 	mode = m
 	base_mode = m
-	think = randf() * 0.5
+	think = world.rng.randf() * 0.5
 
 
 func update(dt: float) -> void:

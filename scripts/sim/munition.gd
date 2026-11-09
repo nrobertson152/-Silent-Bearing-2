@@ -49,7 +49,7 @@ func _init(world, munition_id: String, team: String, from, p: Vector3, v: Vector
 	nuke = md.get("nuke", 0.0)
 	speed = v.length()
 	range_left = md.get("range", 10000.0)
-	weave = randf() * TAU
+	weave = world.rng.randf() * TAU
 	if kind == "shell":
 		drag_c = SimBallistics.drag(mid)
 		max_t = 200.0
