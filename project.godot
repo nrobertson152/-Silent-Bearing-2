@@ -1,0 +1,42 @@
+; Silent Bearing 2 - Godot 4 project file
+
+config_version=5
+
+[application]
+
+config/name="Silent Bearing 2"
+config/description="Cold War gone hot: a naval warfare game. Command US or Soviet warships from frigate to battleship."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1600
+window/size/window_height_override=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
+
+[physics]
+
+common/physics_ticks_per_second=60
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="gl_compatibility"
+rendering_device/fallback_to_opengl3=true
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=1
+lights_and_shadows/directional_shadow/size=8192
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+environment/defaults/default_clear_color=Color(0.04, 0.05, 0.06, 1)
+environment/volumetric_fog/volume_size=96
+environment/volumetric_fog/volume_depth=96
+textures/default_filters/anisotropic_filtering_level=3

@@ -1,0 +1,83 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Godot
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+      - name: Import project
+        run: ./godot --headless --path . --import || true
+      - name: Compile every script
+        run: ./godot --headless --path . -s tools/check_scripts.gd
+      - name: Simulation tests
+        run: ./godot --headless --path . -s tests/run_tests.gd
+      - name: Smoke-run battles (catches runtime script errors)
+        run: |
+          for c in ffg7 dd963 bb61 krivak kirov sovsoyuz; do
+            ./godot --headless --path . -- --sandbox $c --warp 8 --smoke 120 2>&1 | tee -a smoke.log
+          done
+          if grep -q "SCRIPT ERROR" smoke.log || [ "$(grep -c 'SMOKE OK' smoke.log)" -lt 6 ]; then
+            echo "::error::A battle failed to run cleanly"; exit 1
+          fi
+
+  export:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Godot and export templates
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mv templates/linux_release.x86_64 templates/windows_release_x86_64.exe templates/version.txt \
+            "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Import project
+        run: ./godot --headless --path . --import || true
+      - name: Export Linux and Windows
+        run: |
+          mkdir -p build/linux build/windows
+          ./godot --headless --path . --export-release "Linux" build/linux/SilentBearing2.x86_64
+          ./godot --headless --path . --export-release "Windows" build/windows/SilentBearing2.exe
+      - name: Package
+        run: |
+          cp README.md LICENSE build/linux/
+          cp README.md LICENSE build/windows/
+          tar -czf SilentBearing2-linux-x86_64.tar.gz -C build/linux .
+          (cd build/windows && zip -q -r ../../SilentBearing2-windows-x86_64.zip .)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SilentBearing2-linux-x86_64
+          path: SilentBearing2-linux-x86_64.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SilentBearing2-windows-x86_64
+          path: SilentBearing2-windows-x86_64.zip
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            SilentBearing2-linux-x86_64.tar.gz
+            SilentBearing2-windows-x86_64.zip
