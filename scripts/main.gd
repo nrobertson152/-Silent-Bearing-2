@@ -490,7 +490,7 @@ func _front(s: String, i: int) -> Dictionary:
 func _intro_pages(s: String) -> Array:
 	var camp := Campaigns.campaign(s)
 	var paras: Array = camp["intro"]
-	var kicker := "%s  ·  %s" % [SIDE_NAMES[s], camp["subtitle"]]
+	var kicker := String(camp["subtitle"]).to_upper()
 	var pages := []
 	var body := paras.slice(0, paras.size() - 1)
 	var i := 0
