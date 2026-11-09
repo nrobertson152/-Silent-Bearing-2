@@ -10,7 +10,9 @@ extends Node
 ##   --smoke <secs>      quit after N seconds of battle time (CI)
 ##   --shot <png> <secs> [view]   save a screenshot after N seconds
 ##   --warp N            time compression in battle
-##   --hour H            sandbox local time
+##   --hour H            local time (sandbox, or override a mission's)
+##   --vis KM            override a mission's visibility
+##   --at X Y            put your ship X km east, Y km north of the mission origin
 
 const Game := preload("res://scripts/game.gd")
 const S := preload("res://scripts/ui/style.gd")
@@ -79,7 +81,14 @@ func _ready() -> void:
 		side = id.substr(0, 2)
 		idx = _index_of(side, id)
 		mode = "campaign"
-		start_mission(Campaigns.mission(side, idx).duplicate(true))
+		var def: Dictionary = Campaigns.mission(side, idx).duplicate(true)
+		if args.has("view"):
+			def["start_view"] = args["view"]
+		if args.has("hour"):
+			def["time"] = args["hour"]
+		if args.has("vis"):
+			def["weather"]["vis"] = args["vis"]
+		start_mission(def)
 	elif args.has("screen"):
 		_open_screen(args["screen"])
 	else:
@@ -116,6 +125,12 @@ func _parse_args() -> void:
 			"--hour":
 				args["hour"] = float(a[i + 1])
 				i += 1
+			"--vis":
+				args["vis"] = float(a[i + 1])
+				i += 1
+			"--at":
+				args["at"] = Vector2(float(a[i + 1]), float(a[i + 2]))
+				i += 2
 		i += 1
 
 
@@ -318,6 +333,9 @@ func start_mission(def: Dictionary) -> void:
 	game.pause_requested.connect(_on_pause)
 	if args.has("warp"):
 		game.tc = float(args["warp"])
+	if args.has("at"):
+		var at: Vector2 = args["at"]
+		game.player.pos = Vector3(at.x * 1000.0, game.player.pos.y, -at.y * 1000.0)
 
 
 func _on_pause() -> void:

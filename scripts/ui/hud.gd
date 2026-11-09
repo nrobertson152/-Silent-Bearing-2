@@ -84,7 +84,7 @@ func _draw() -> void:
 	if g.mode != "map":
 		_crosshair(vs)
 		_compass(vs)
-	_ship_panel(Rect2(14, 14, 400, 268), p)
+	_ship_panel(Rect2(14, 14, 400, 296), p)
 	_damage_panel(Rect2(14, vs.y - 196, 400, 182), p)
 	_weapons_panel(Rect2(vs.x - 444, vs.y - 330, 430, 316), p)
 	_mission_panel(Rect2(vs.x - 444, 14, 430, 230))
@@ -149,9 +149,10 @@ func _ship_panel(r: Rect2, p) -> void:
 	for s in pl.shafts:
 		rpms.append("%d" % int(pl.shaft_rpm(s)))
 	S.text(self, "SHAFT RPM  " + " / ".join(rpms), Vector2(x, ey + 20), 15, S.TEXT)
-	if pl.kind == "steam" and not pl.nuclear:
-		_bar(Rect2(x + 210, ey + 8, r.size.x - 234, 14), pl.steam / 1.05, S.GOOD if pl.steam > 0.85 else S.ALARM, "STEAM", "%d%%" % int(pl.steam / 1.05 * 100))
 	var uy := ey + 42
+	if pl.kind == "steam" and not pl.nuclear:
+		_bar(Rect2(x, ey + 28, r.size.x - 24, 14), pl.steam / 1.05, S.GOOD if pl.steam > 0.85 else S.ALARM, "STEAM PRESSURE", "%d%%" % int(pl.steam / 1.05 * 100))
+		uy = ey + 60
 	var col := 0
 	for i in pl.units.size():
 		var un: Dictionary = pl.units[i]
@@ -185,7 +186,7 @@ func _damage_panel(r: Rect2, p) -> void:
 		var h: float = p.mod_hp(k)
 		var c := S.GOOD if h > 0.7 else (S.AMBER if h > 0.3 else S.ALARM)
 		S.text(self, k.to_upper(), Vector2(mx, y + 100), 13, c)
-		mx += 62
+		mx += S.mono().get_string_size(k.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 14.0
 	if p.sinking:
 		S.text(self, "ABANDON SHIP", Vector2(x, y + 140), 26, S.ALARM, HORIZONTAL_ALIGNMENT_LEFT, -1, S.heavy())
 	elif p.is_sub:
@@ -253,8 +254,10 @@ func _mission_panel(r: Rect2) -> void:
 			var c := S.GOOD if line[2] == "done" else (S.ALARM if line[2] == "failed" else S.TEXT)
 			if line[3]:
 				c = c.darkened(0.25)
-			S.text(self, "%s %s" % [line[0], line[1]], Vector2(x, yy), 14, c, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 24)
-			yy += 20
+			var txt := "%s %s" % [line[0], line[1]]
+			var w := r.size.x - 24
+			draw_multiline_string(S.mono(), Vector2(x, yy), txt, HORIZONTAL_ALIGNMENT_LEFT, w, 14, 3, c)
+			yy += S.mono().get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, w, 14, 3).y + 4.0
 
 
 func _messages(pos: Vector2) -> void:
@@ -340,6 +343,7 @@ func _crosshair(vs: Vector2) -> void:
 			var lc := Color(S.AMBER, 0.4 + 0.6 * g.fc_q)
 			draw_arc(lp, 9.0, 0, TAU, 20, lc, 2.0)
 			draw_line(lp + Vector2(-14, 0), lp + Vector2(14, 0), lc, 1.0)
+	var used := []
 	for e in g.w.units:
 		if e == g.player or e == tg or not e.alive() or not g.w.known_to(g.player.side, e):
 			continue
@@ -354,7 +358,17 @@ func _crosshair(vs: Vector2) -> void:
 		if e.navy == "merchant":
 			col = Color(0.8, 0.8, 0.7, 0.7)
 		draw_rect(Rect2(sp - Vector2(5, 5), Vector2(10, 10)), col, false, 1.5)
-		S.text(self, "%s %s" % [e.cls.get("class", "").split(" ")[0], U.km(d)], sp + Vector2(8, -6), 12, col)
+		var lp := sp + Vector2(8, -6)
+		for tries in 6:
+			var clash := false
+			for q: Vector2 in used:
+				if absf(q.x - lp.x) < 110.0 and absf(q.y - lp.y) < 13.0:
+					clash = true
+			if not clash:
+				break
+			lp.y += 14.0
+		used.append(lp)
+		S.text(self, "%s %s" % [e.cls.get("class", "").split(" ")[0], U.km(d)], lp, 12, col)
 
 
 func _help(vs: Vector2) -> void:

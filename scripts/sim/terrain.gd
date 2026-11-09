@@ -4,7 +4,7 @@ extends RefCounted
 ## few hundred metres into noisy hills. The simulation samples it for shell
 ## impacts, grounding and shore targets; the view meshes the same grid.
 
-var n := 320
+var n := 400
 var extent := 60000.0
 var cell := 375.0
 var heights := PackedFloat32Array()
@@ -72,7 +72,8 @@ func build(polys: Array, max_h: float, ext: float, seed_val := 7) -> void:
 			dist[k] = v
 	var noise := FastNoiseLite.new()
 	noise.seed = seed_val
-	noise.frequency = 0.00012
+	# Higher ground is more rugged: finer features for mountains.
+	noise.frequency = 0.00012 * (1.0 + hmax / 350.0)
 	noise.fractal_octaves = 5
 	noise.fractal_lacunarity = 2.1
 	for j in n + 1:
@@ -83,7 +84,7 @@ func build(polys: Array, max_h: float, ext: float, seed_val := 7) -> void:
 				heights[k] = -18.0
 				continue
 			var dm := dist[k] * cell
-			var shore := clampf(dm / 1400.0, 0.0, 1.0)
+			var shore := clampf(dm / clampf(hmax * 6.0, 500.0, 2200.0), 0.0, 1.0)
 			shore = shore * shore * (3.0 - 2.0 * shore)
 			var nz := noise.get_noise_2d(p.x, p.y) * 0.5 + 0.5
 			heights[k] = 4.0 + hmax * shore * (0.25 + 0.95 * nz * nz) + 10.0 * shore

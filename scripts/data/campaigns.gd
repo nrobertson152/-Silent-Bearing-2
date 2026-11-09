@@ -47,7 +47,7 @@ const CAMPAIGNS := {
 		"missions": [
 			{
 				"id": "us1", "title": "Capes Patrol", "ship": "ffg7", "side": "us", "date": [1988, 9, 21], "time": 6.2,
-				"lat": 36.95, "lon": -75.6, "geo": "us1", "location": "Off Cape Henry, Virginia",
+				"lat": 36.95, "lon": -75.6, "geo": "us1", "land_h": 15.0, "location": "Off Cape Henry, Virginia",
 				"weather": {"sea": 3.0, "wind": 40.0, "vis": 18.0, "clouds": 0.6},
 				"briefing": "Convoy C-2, three ammunition ships bound for the first reinforcement convoy to Europe, sails from Hampton Roads at dawn. A Soviet nuclear attack submarine was detected yesterday off Cape Henry, and Soviet Naval Aviation has been staging Backfire bombers through Cuba.\n\nEscort the convoy north until the destroyers from Norfolk relieve you in about 25 minutes. Your SH-60B Seahawk is airborne on anti-submarine screen.",
 				"intel": "One Akula-class nuclear attack submarine, suspected. Four Tu-22M3 Backfires with Kh-22 missiles possible after 0630.",
@@ -81,7 +81,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "us2", "title": "Hunter at Bermuda", "ship": "ssn688", "side": "us", "date": [1988, 9, 30], "time": 21.5,
-				"lat": 32.0, "lon": -64.75, "geo": "us2", "location": "South of Bermuda",
+				"lat": 32.0, "lon": -64.75, "geo": "us2", "land_h": 50.0, "location": "South of Bermuda",
 				"weather": {"sea": 3.0, "wind": 200.0, "vis": 14.0, "clouds": 0.5},
 				"briefing": "A Soviet amphibious group, two troop transports with a Sovremenny-class destroyer and a Krivak-class frigate, is making fourteen knots for Bermuda. If they land, Backfires will fly from Kindley Field within the week and the western Atlantic will be closed.\n\nYou are the only unit in range. Get inside the screen and sink both transports before they reach the island.",
 				"intel": "Sovremenny-class destroyer (no towed array, weak sonar), Krivak-class frigate (good hull and variable-depth sonar), Ka-27 Helix anti-submarine helicopter. Two transports with a naval infantry regiment embarked.",
@@ -185,7 +185,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "us5", "title": "Reykjanes Guns", "ship": "ca139", "side": "us", "date": [1988, 11, 2], "time": 9.8,
-				"lat": 63.70, "lon": -22.60, "geo": "us5", "location": "Reykjanes Peninsula, Iceland",
+				"lat": 63.70, "lon": -22.60, "geo": "us5", "land_h": 250.0, "location": "Reykjanes Peninsula, Iceland",
 				"weather": {"sea": 3.0, "wind": 60.0, "vis": 16.0, "clouds": 0.65},
 				"briefing": "The landings on Iceland begin today. Soviet coastal batteries on the south shore of the Reykjanes Peninsula cover the landing beaches, and two SA-10 missile sites around Keflavik will slaughter the 82nd Airborne's transports unless they are destroyed.\n\nSilence the batteries and the SAM sites with your 8-inch guns. Protect the landing ships waiting offshore.",
 				"intel": "Three 152 mm coastal batteries (range 22 km), two SA-10 sites near Keflavik, a P-35 search radar. Two Krivak-class frigates patrol offshore. A Backfire raid is possible.",
@@ -227,7 +227,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "us6", "title": "Lofoten", "ship": "bb61", "side": "us", "date": [1988, 11, 16], "time": 11.6,
-				"lat": 68.2, "lon": 12.0, "geo": "us6", "location": "West of the Lofoten Islands, Norway",
+				"lat": 68.2, "lon": 12.0, "geo": "us6", "land_h": 700.0, "location": "West of the Lofoten Islands, Norway",
 				"weather": {"sea": 4.0, "wind": 230.0, "vis": 20.0, "clouds": 0.5},
 				"briefing": "Norwegian Brigade North and the Army's 10th Mountain Division are going ashore at Narvik. The Soviet Kirov battle group, the nuclear battlecruiser Frunze with two Sovremenny-class destroyers and a Krivak, has sortied to break up the landings.\n\nIntercept and sink Frunze. The Iowa's armour will shrug off what her escorts carry; her twenty Granit missiles are another matter.",
 				"intel": "Frunze (Kirov class): 20 SS-N-19 Shipwreck missiles (750 kg warheads), S-300 air defence, 76 mm of armour at most. Two Sovremenny destroyers and a Krivak frigate.",
@@ -262,7 +262,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "us7", "title": "Barents Gate", "ship": "bb61", "side": "us", "date": [1988, 11, 29], "time": 12.0,
-				"lat": 71.6, "lon": 26.0, "geo": "us7", "location": "Off North Cape, entering the Barents Sea",
+				"lat": 71.6, "lon": 26.0, "geo": "us7", "land_h": 300.0, "location": "Off North Cape, entering the Barents Sea",
 				"weather": {"sea": 5.0, "wind": 60.0, "vis": 14.0, "clouds": 0.4, "aurora": 1.0},
 				"nuclear_release": true,
 				"briefing": "The polar night has fallen over North Cape. The battleship Sovetsky Soyuz, completed in secret in the 1950s and rebuilt with missiles in the 1980s, is steaming west with her escorts to meet you. Behind her lie the Kola bases and the Soviet ballistic-missile submarines.\n\nSink Sovetsky Soyuz. The President has delegated release authority for nuclear weapons against naval targets at sea. Your W23 shells and nuclear Tomahawks are armed. Whether to use them is your decision.",
@@ -318,7 +318,7 @@ const CAMPAIGNS := {
 		"missions": [
 			{
 				"id": "su1", "title": "Kola Inlet", "ship": "krivak", "side": "su", "date": [1988, 9, 18], "time": 2.5,
-				"lat": 69.40, "lon": 33.75, "geo": "su1", "location": "Mouth of the Kola Bay",
+				"lat": 69.40, "lon": 33.75, "geo": "su1", "land_h": 250.0, "location": "Mouth of the Kola Bay",
 				"weather": {"sea": 2.0, "wind": 200.0, "vis": 15.0, "clouds": 0.25, "aurora": 1.0},
 				"briefing": "Two ammunition transports are leaving the Kola Bay tonight for the army at the Titovka River. An American submarine has been laying mines and attacking shipping off the inlet, and carrier aircraft raid the coast at dawn.\n\nEscort the transports clear of the inlet. Find the American submarine if you can.",
 				"intel": "One Los Angeles-class nuclear submarine (very quiet at low speed). Carrier-based A-6E Intruders with Harpoon missiles expected after 0330.",
@@ -385,7 +385,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "su3", "title": "Varangerfjord", "ship": "sovremenny", "side": "su", "date": [1988, 10, 12], "time": 12.5,
-				"lat": 70.05, "lon": 30.6, "geo": "su3", "location": "Varangerfjord, off the Norwegian border",
+				"lat": 70.05, "lon": 30.6, "geo": "su3", "land_h": 200.0, "location": "Varangerfjord, off the Norwegian border",
 				"weather": {"sea": 3.0, "wind": 240.0, "vis": 25.0, "clouds": 0.5},
 				"briefing": "An American surface group, a Spruance-class destroyer and two Perry-class frigates, has been shelling the 131st Motor Rifle Division from the Varangerfjord for two days. The army's counter-attack on Pechenga cannot begin until they are gone.\n\nDestroy the American group.",
 				"intel": "USS Peterson (Spruance class: Harpoon, Tomahawk, two 5-inch guns), USS Nicholas and USS Simpson (Perry class). Carrier aircraft may raid later.",
@@ -416,7 +416,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "su4", "title": "Guns for Kirkenes", "ship": "sverdlov", "side": "su", "date": [1988, 10, 22], "time": 9.5,
-				"lat": 69.80, "lon": 30.2, "geo": "su4", "location": "Off Kirkenes, Norway",
+				"lat": 69.80, "lon": 30.2, "geo": "su4", "land_h": 250.0, "location": "Off Kirkenes, Norway",
 				"weather": {"sea": 2.0, "wind": 180.0, "vis": 18.0, "clouds": 0.6},
 				"briefing": "The army attacks Kirkenes at dawn. NATO artillery batteries dug in along the shore and two Hawk missile sites stand in the way. Naval infantry landing ships are waiting to put a brigade ashore behind the line.\n\nSilence the batteries and the Hawk sites with your 152 mm guns, and protect the landing ships.",
 				"intel": "Three NATO artillery batteries (155 mm and 152 mm captured guns), two Hawk SAM sites, the frigate USS Simpson. Carrier aircraft may attack with Harpoons.",
@@ -489,7 +489,7 @@ const CAMPAIGNS := {
 			},
 			{
 				"id": "su6", "title": "Keflavik", "ship": "sovsoyuz", "side": "su", "date": [1988, 11, 15], "time": 10.5,
-				"lat": 63.70, "lon": -22.60, "geo": "su6", "location": "Reykjanes Peninsula, Iceland",
+				"lat": 63.70, "lon": -22.60, "geo": "su6", "land_h": 250.0, "location": "Reykjanes Peninsula, Iceland",
 				"weather": {"sea": 4.0, "wind": 50.0, "vis": 15.0, "clouds": 0.7},
 				"briefing": "The 76th Guards Air Assault Division will drop on Keflavik when the American Hawk sites are gone. Coastal batteries on the Reykjanes shore cover the landing beaches for the naval infantry, and the heavy cruiser USS Salem defends the approaches.\n\nSilence the batteries and the Hawk sites. Protect the landing ships.",
 				"intel": "Three coastal batteries, two Hawk sites and an AN/FPS-117 radar. USS Salem (Des Moines class: nine fast-firing 8-inch guns, 152 mm belt) and the frigate USS Kauffman.",

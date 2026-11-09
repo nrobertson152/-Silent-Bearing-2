@@ -37,14 +37,23 @@ void vertex() {
 }
 
 void fragment() {
-	float slope = 1.0 - clamp(wn.y, 0.0, 1.0);
+	// Fine relief the 330 m grid cannot hold: tilt the normal by the gradient
+	// of a 10 m, 120 m-wavelength noise field.
+	vec2 q = wp.xz / 120.0;
+	float h0 = fbm(q);
+	float gx = (fbm(q + vec2(0.04, 0.0)) - h0) / 0.04;
+	float gz = (fbm(q + vec2(0.0, 0.04)) - h0) / 0.04;
+	float relief = 10.0 / 120.0 * smoothstep(1.0, 6.0, wp.y);
+	vec3 nw = normalize(normalize(wn) - vec3(gx, 0.0, gz) * relief);
+	float slope = 1.0 - clamp(nw.y, 0.0, 1.0);
 	float n = fbm(wp.xz * 0.004);
 	float n2 = fbm(wp.xz * 0.05);
-	vec3 col = mix(grass * (0.8 + 0.4 * n2), rock * (0.85 + 0.3 * n2), smoothstep(0.18, 0.42, slope + (n - 0.5) * 0.3));
+	vec3 col = mix(grass * (0.8 + 0.4 * n2), rock * (0.85 + 0.3 * n2), smoothstep(0.2, 0.45, slope + (n - 0.5) * 0.3));
 	col = mix(sand * (0.9 + 0.2 * n2), col, smoothstep(2.0, 9.0, wp.y + n * 4.0));
-	float sn = smoothstep(snow_line - 25.0, snow_line + 25.0, wp.y + (n - 0.5) * 60.0) * (1.0 - smoothstep(0.35, 0.65, slope)) * snow;
+	float sn = smoothstep(snow_line - 25.0, snow_line + 25.0, wp.y + (n - 0.5) * 60.0) * (1.0 - smoothstep(0.4, 0.7, slope)) * snow;
 	col = mix(col, snow_col * (0.92 + 0.08 * n2), clamp(sn, 0.0, 1.0));
 	ALBEDO = col;
 	ROUGHNESS = mix(0.95, 0.7, sn);
 	SPECULAR = 0.2;
+	NORMAL = normalize((VIEW_MATRIX * vec4(nw, 0.0)).xyz);
 }

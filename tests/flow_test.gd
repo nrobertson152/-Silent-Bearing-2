@@ -20,6 +20,10 @@ func _init() -> void:
 	Save.load_save(true)
 	Save.reset("us")
 	Save.reset("su")
+	# A script error ends the coroutine without quitting: fail instead of hanging.
+	create_timer(420.0).timeout.connect(func():
+		print("FLOW TIMEOUT: the test stopped part way (look for SCRIPT ERROR above)")
+		quit(1))
 	_run.call_deferred()
 
 
@@ -125,6 +129,31 @@ func _run() -> void:
 	m._debrief_choice("menu")
 	await frames(2)
 	check(m.state == "menu", "free battle debrief back to the menu")
+	# Every visual effect runs (they only fail at runtime, when something burns).
+	m.start_mission(Skirmish.build("bb61", "sag", 0, 2, 3.0))
+	await frames(3)
+	var fx = m.game.view.fx
+	var pn: Node3D = m.game.view.ship_node(m.game.player)
+	var at: Vector3 = m.game.player.pos + Vector3(0, 5, -300)
+	fx.flash(at, 4.0, 60.0)
+	fx.muzzle(at, Vector3.FORWARD, 406.0)
+	fx.splash(at, 2.0)
+	fx.explosion(at, 3.0)
+	fx.air_burst(at + Vector3(0, 300, 0))
+	fx.launch_plume(at, true)
+	fx.depth_bomb(at, 1.0)
+	fx.ground_hit(at, 1.5)
+	fx.fire_column(pn, Vector3(0, 8, 0), 1.0)
+	fx.funnel_smoke(pn, Vector3(0, 30, 0), true, 1.0)
+	fx.missile_trail(pn, true)
+	fx.tracer(at, at + Vector3(0, 50, -200))
+	fx.nuke(at + Vector3(0, 0, -20000), 1500.0)
+	for ev: Dictionary in [{"t": "splash", "pos": at}, {"t": "hit", "pos": at, "kind": "torpedo"}, {"t": "magazine", "pos": at},
+			{"t": "ground_destroyed", "pos": at}, {"t": "ciws", "pos": at, "target": at + Vector3(0, 20, -500)},
+			{"t": "battery_fire", "pos": at}, {"t": "torpedo_launch", "pos": at}]:
+		m.game.view.handle_event(ev)
+	await frames(20)
+	check(true, "visual effects")
 	# Every campaign mission loads and runs.
 	for s: String in ["us", "su"]:
 		m.side = s
