@@ -83,7 +83,7 @@ func _draw() -> void:
 	var vs := get_viewport_rect().size
 	var p = g.player
 	if g.mode == "conn":
-		_messages(Vector2(24, vs.y - 330))
+		_messages(Vector2(24, 92), vs.x * 0.56, 2, true, 2)
 		if big_t > 0.0:
 			S.text(self, big_msg, Vector2(0, vs.y * 0.3), 38, Color(S.AMBER, clampf(big_t, 0.0, 1.0)), HORIZONTAL_ALIGNMENT_CENTER, vs.x, S.heavy())
 		if hint_t > 0.0:
@@ -270,16 +270,29 @@ func _mission_panel(r: Rect2) -> void:
 			yy += S.mono().get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, w, 14, 3).y + 4.0
 
 
-func _messages(pos: Vector2) -> void:
-	var y := pos.y + 170
+## The radio log. Newest at the bottom, older lines climbing above it; long
+## messages wrap. In the control room a short list runs down from the top.
+func _messages(pos: Vector2, width := 980.0, max_n := 9, downward := false, max_lines := 3) -> void:
+	var f := S.mono()
+	var fh := f.get_height(16)
+	var y := pos.y + (0.0 if downward else 170.0)
+	var n := 0
 	for m in msgs:
 		var a := clampf(1.0 - (float(m["t"]) - 18.0) / 6.0, 0.0, 1.0)
 		if a <= 0.0:
 			continue
+		n += 1
+		if n > max_n:
+			break
 		var from: String = m["from"]
 		var s := ("[%s]  " % from.to_upper() if from != "" else "") + String(m["text"])
-		S.text(self, s, Vector2(pos.x, y), 16, Color(m["col"], a), HORIZONTAL_ALIGNMENT_LEFT, 980)
-		y -= 22
+		var lines := mini(max_lines, maxi(1, int(round(f.get_multiline_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, width, 16, max_lines).y / fh))))
+		var top := y if downward else y - (lines - 1) * fh
+		draw_multiline_string(f, Vector2(pos.x, top), s, HORIZONTAL_ALIGNMENT_LEFT, width, 16, max_lines, Color(m["col"], a))
+		if downward:
+			y = top + lines * fh + 4.0
+		else:
+			y = top - fh - 4.0
 
 
 func _compass(vs: Vector2) -> void:

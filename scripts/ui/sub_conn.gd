@@ -131,7 +131,8 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, vs), Color(0.02, 0.03, 0.03))
 	S.text(self, "CONTROL ROOM  ·  %s" % p.name.to_upper(), Vector2(24, 36), 22, S.side_color(p.side), HORIZONTAL_ALIGNMENT_LEFT, -1, S.heavy())
 	S.text(self, "%s   %sL" % [U.clock(g.w.t), U.clock_hm(g.local_hour())], Vector2(24, 60), 15, S.MUTED)
-	var wf := Rect2(24, 96, vs.x * 0.56, vs.y * 0.6)
+	# The radio log runs between the title and the waterfall (drawn by the HUD).
+	var wf := Rect2(24, 170, vs.x * 0.56, vs.y * 0.52)
 	_waterfall(wf)
 	_ship(Rect2(24, wf.end.y + 16, wf.size.x, vs.y - wf.end.y - 40))
 	var rx := wf.end.x + 18
@@ -170,15 +171,21 @@ func _waterfall(r: Rect2) -> void:
 			if x1 > x0:
 				draw_rect(Rect2(x0, area.position.y, x1 - x0, area.size.y), Color(0.0, 0.0, 0.0, 0.35))
 				S.text(self, "BAFFLES", Vector2(x0 + 4, area.end.y - 8), 11, Color(S.AMBER, 0.6))
-	# Tracker labels on the traces.
+	# Tracker labels on the traces, staggered when contacts share a bearing.
+	var placed := []
 	for e in g.w.units:
 		if not trackers.has(e.uid) or not e.alive():
 			continue
 		var b := U.brg(p.pos, e.pos)
 		var x := area.position.x + area.size.x * b / 360.0
 		var col := S.AMBER if e == g.target else Color(PHOS, 0.9)
+		var ly := area.position.y + 28.0
+		for q: Vector2 in placed:
+			if absf(q.x - x) < 30.0 and absf(q.y - ly) < 8.0:
+				ly += 15.0
+		placed.append(Vector2(x, ly))
 		draw_line(Vector2(x, area.position.y + 2), Vector2(x, area.position.y + 14), col, 2.0)
-		S.text(self, "S%d" % trackers[e.uid], Vector2(x - 10, area.position.y + 28), 13, col)
+		S.text(self, "S%d" % trackers[e.uid], Vector2(x - 10, ly), 13, col)
 	for m in g.w.muns:
 		if m.alive and m.kind == "torpedo" and m.shooter != p and U.flat_dist(p.pos, m.pos) < 15000.0:
 			var x := area.position.x + area.size.x * U.brg(p.pos, m.pos) / 360.0
@@ -327,7 +334,7 @@ func _controls(r: Rect2) -> void:
 			buttons.append([br, b[1]])
 			bx += bw + 8
 		y += 42
-	S.text(self, "Keys: W/S bells · A/D rudder · PgUp/PgDn depth · T next target · Space fire · Z weapon · N decoy · P periscope · V outside · M plot",
+	S.text(self, "W/S bells · A/D rudder · PgUp/PgDn depth · T target · Space fire · Z weapon · N decoy · P scope · V outside",
 		Vector2(x, r.end.y - 8), 12, S.MUTED, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 24)
 
 

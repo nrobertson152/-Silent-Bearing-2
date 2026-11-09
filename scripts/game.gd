@@ -148,6 +148,7 @@ func start(def: Dictionary) -> void:
 		set_mode("bridge" if bridge != null and sv == "bridge" else "external")
 	hud.banner(def.get("title", ""), 5.0)
 	hud.message("", def.get("location", ""), S.MUTED)
+	hud.show_hint("F1: controls     Esc: pause", 7.0)
 	if def.has("start_radio"):
 		for r in def["start_radio"]:
 			hud.message(r[0], r[1], S.AMBER)

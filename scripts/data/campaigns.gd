@@ -68,6 +68,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Find and sink the Soviet submarine", "type": "destroy", "tag": "sub", "optional": true},
 				],
 				"events": [
+					{"at": 180.0, "radio": ["Fleet broadcast", "Germany: V Corps holds the Rhine crossings at Mainz and Koblenz for a sixth day. The 3rd Armored Division counterattacks near Wiesbaden."], "kind": "story"},
+					{"at": 900.0, "radio": ["Fleet broadcast", "Air Force C-5s and C-141s are flying ammunition and spares to Europe around the clock. Every runway in England is full."], "kind": "story"},
 					{"at": 4.0, "radio": ["Commodore", "Roberts, Commodore. Charlie-Two is formed up, steaming zero-four-five at twelve knots. Keep that submarine off them until Norfolk relieves you."]},
 					{"at": 95.0, "radio": ["Sonar", "Conn, sonar. Faint broadband noise, bearing roughly zero-three-five. Could be a submarine."]},
 					{"at": 1490.0, "radio": ["Commodore", "Roberts, the destroyers have the convoy. You are relieved. Well done."]},
@@ -102,6 +104,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Sink the escorts", "type": "destroy", "tag": "escorts", "optional": true},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet broadcast", "Soviet Backfires flying from Keflavik struck shipping off Newfoundland tonight. Two merchantmen lost."], "kind": "story"},
+					{"at": 600.0, "radio": ["Fleet broadcast", "Germany: NATO aircraft flew more than fourteen hundred sorties today. The Rhine line holds."], "kind": "story"},
 					{"at": 4.0, "radio": ["SUBLANT", "Dallas, SUBLANT. Soviet amphibious group bearing zero-one-five, thirty-four kilometres, speed fourteen, heading for Bermuda. Sink the transports. Weapons free."]},
 					{"at": 60.0, "radio": ["Sonar", "Conn, sonar. Two sets of screws, merchant type, bearing zero-two-five. Warship turbines too."]},
 				],
@@ -136,6 +140,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Protect the fast sealift ships (two must survive)", "type": "protect", "tag": "convoy", "min": 2, "until_flag": "o1_done"},
 				],
 				"events": [
+					{"at": 120.0, "radio": ["Fleet broadcast", "The first reinforcement convoy, forty-two ships, cleared New York this morning."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet broadcast", "Germany: the 1st Cavalry Division is unloading at Rotterdam and moving up to the Rhine."], "kind": "story"},
 					{"at": 4.0, "radio": ["Commodore", "Spruance, surface group bearing zero-six-five, eighty kilometres, closing at twenty-four knots. Engage before they reach Harpoon range of the convoy."]},
 				],
 				"front": {"iceland": "su", "norway_n": "su", "faroes": "su", "pechenga": "su", "bermuda": "us", "europe": "rhine"},
@@ -172,6 +178,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Sink the shadowing submarine", "type": "destroy", "tag": "sub", "optional": true},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet broadcast", "The 2nd Marine Division is at sea for Iceland. Air Force F-15s are now flying from Sondrestrom, Greenland."], "kind": "story"},
+					{"at": 800.0, "radio": ["Fleet broadcast", "Germany: British and Dutch troops have retaken Arnhem. The Rhine line holds everywhere."], "kind": "story"},
 					{"at": 4.0, "radio": ["Commodore", "Bunker Hill, you have the air. The Marines are counting on you."]},
 					{"at": 1990.0, "radio": ["Sentry", "Last raid is turning for home. No more bandits on the scope."]},
 				],
@@ -213,6 +221,8 @@ const CAMPAIGNS := {
 					{"id": "o3", "text": "Protect the landing ships", "type": "protect", "tag": "landing", "min": 1, "until_flag": "o2_done"},
 				],
 				"events": [
+					{"at": 120.0, "radio": ["Fleet broadcast", "Norway: Norwegian Brigade North and US Marines are holding the mountains south of Narvik."], "kind": "story"},
+					{"at": 600.0, "radio": ["Fleet broadcast", "At Goose Bay, paratroopers of the 82nd Airborne are boarding their C-141s."], "kind": "story"},
 					{"at": 25.0, "radio": ["Whiskey Two", "Salem, Whiskey Two, forward observer on Reykjanes Point. Batteries are dug in along the south shore. Ready to adjust your fire."]},
 					{"when": "o1_done", "radio": ["Beachmaster", "Batteries silenced. First wave is going in."]},
 					{"when": "o2_done", "radio": ["Hammer 6", "SAMs are down! The 82nd is jumping on Keflavik. Thanks, Salem."]},
@@ -250,6 +260,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Destroy her escorts", "type": "destroy", "tag": "escorts", "optional": true},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet broadcast", "Iceland is free. Keflavik is open to our aircraft, and P-3 Orions are already flying from it."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet broadcast", "Germany: Belgian and German divisions are advancing on the Weser."], "kind": "story"},
 					{"at": 4.0, "radio": ["COMSTRIKFLT", "Missouri, the Frunze group is bearing zero-four-zero, ninety kilometres. Engage. The landings at Narvik depend on you."]},
 				],
 				"front": {"iceland": "us", "norway_n": "su", "faroes": "us", "pechenga": "su", "bermuda": "us", "europe": "rhine"},
@@ -286,6 +298,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Destroy the escort group", "type": "destroy", "tag": "escorts", "optional": true},
 				],
 				"events": [
+					{"at": 200.0, "radio": ["Fleet broadcast", "Norway: Tromsø has been retaken. Norwegian troops are advancing into Finnmark."], "kind": "story"},
+					{"at": 900.0, "radio": ["Fleet broadcast", "Germany: NATO forces are back on the inner-German border. In Geneva, the Soviet ambassador has asked for talks."], "kind": "story"},
 					{"at": 4.0, "radio": ["CINCLANTFLT", "Missouri, release authority for special weapons against naval targets at sea is delegated to you. The decision is yours. Good hunting."]},
 					{"at": 30.0, "radio": ["Sentry", "Surface group bearing zero-seven-zero, seventy kilometres. Sovetsky Soyuz is leading."]},
 				],
@@ -339,6 +353,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Sink the American submarine", "type": "destroy", "tag": "sub", "optional": true},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet bulletin", "The front: our forces hold the Elbe at Magdeburg and Wittenberge. Frontal aviation struck NATO airfields in Schleswig-Holstein."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet bulletin", "American carrier aircraft struck Severomorsk again at dusk. Air defence troops report eleven aircraft destroyed."], "kind": "story"},
 					{"at": 4.0, "radio": ["Operational duty officer", "Bezzavetny, the transports are clear of the boom. Escort them east of Kildin. Keep the American submarine off them."]},
 					{"at": 1490.0, "radio": ["Operational duty officer", "Transports are clear. Well done, Bezzavetny. Return to base."]},
 				],
@@ -372,6 +388,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Sink the escorts", "type": "destroy", "tag": "escorts", "optional": true},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet bulletin", "The front: reserves from the Belorussian Military District are moving up to the Elbe."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet bulletin", "Pechenga: the 131st Motor Rifle Division is counterattacking the American Marines at Luostari."], "kind": "story"},
 					{"at": 4.0, "radio": ["Northern Fleet", "K-284, convoy bearing three-four-zero, thirty-seven kilometres, speed fifteen, heading south-south-east. Attack."]},
 				],
 				"front": {"iceland": "us", "norway_n": "us", "faroes": "us", "pechenga": "us", "bermuda": "us", "europe": "elbe"},
@@ -403,6 +421,8 @@ const CAMPAIGNS := {
 					{"id": "o1", "text": "Destroy the American surface group", "type": "destroy", "tag": "usgroup"},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet bulletin", "Naval aviation reports an American carrier damaged in the Norwegian Sea by Backfire regiments from Olenya."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet bulletin", "The front: the American offensive has stopped at the Elbe. Our tank armies are regrouping around Leipzig."], "kind": "story"},
 					{"at": 4.0, "radio": ["Northern Fleet", "Otlichny, American group bearing two-seven-zero, thirty-five kilometres. The army is waiting. Attack."]},
 				],
 				"front": {"iceland": "us", "norway_n": "us", "faroes": "us", "pechenga": "contested", "bermuda": "us", "europe": "elbe"},
@@ -442,6 +462,8 @@ const CAMPAIGNS := {
 					{"id": "o3", "text": "Protect the landing ships", "type": "protect", "tag": "landing", "min": 1, "until_flag": "o1_done"},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet bulletin", "Pechenga is ours again. The Americans are falling back on Kirkenes."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet bulletin", "The front: the 1st Guards Tank Army counterattacks at Magdeburg and retakes the bridgehead."], "kind": "story"},
 					{"at": 20.0, "radio": ["Army spotter", "Murmansk, forward observer with the 2nd Battalion. The batteries are along the shore east and west of Kirkenes. Ready to correct your fire."]},
 					{"when": "o1_done", "radio": ["Naval infantry", "The batteries are silent! The brigade is landing."]},
 				],
@@ -476,6 +498,8 @@ const CAMPAIGNS := {
 					{"id": "o1", "text": "Destroy the American surface group", "type": "destroy", "tag": "usgroup"},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet bulletin", "Kirkenes is liberated. Our tanks are on the coast road west toward Tromsø."], "kind": "story"},
+					{"at": 800.0, "radio": ["Fleet bulletin", "The front: the Americans are short of fuel, and the line on the Elbe is quiet."], "kind": "story"},
 					{"at": 4.0, "radio": ["Northern Fleet", "Kirov, American group bearing two-two-five, one hundred and ten kilometres. The fleet goes south through you. Attack."]},
 				],
 				"front": {"iceland": "us", "norway_n": "contested", "faroes": "us", "pechenga": "su", "bermuda": "us", "europe": "elbe"},
@@ -517,6 +541,8 @@ const CAMPAIGNS := {
 					{"id": "o4", "text": "Sink USS Salem", "type": "destroy", "tag": "defenders", "count": 1, "optional": true},
 				],
 				"events": [
+					{"at": 150.0, "radio": ["Fleet bulletin", "Long-range aviation struck the American convoy assembly area at Halifax last night."], "kind": "story"},
+					{"at": 700.0, "radio": ["Fleet bulletin", "Northern Norway: Tromsø is ours. The Norwegians are falling back on Narvik."], "kind": "story"},
 					{"at": 20.0, "radio": ["Spotter", "Sovetsky Soyuz, spotter group ashore near Reykjanes lighthouse. Batteries along the south shore. Ready."]},
 					{"when": "o2_done", "radio": ["76th Guards", "Hawks are silent. The division is jumping. For the Motherland!"]},
 				],
@@ -553,6 +579,8 @@ const CAMPAIGNS := {
 					{"id": "o2", "text": "Destroy the escort group", "type": "destroy", "tag": "escorts", "optional": true},
 				],
 				"events": [
+					{"at": 200.0, "radio": ["Fleet bulletin", "Iceland is ours. Our fighters are flying from Keflavik's runways."], "kind": "story"},
+					{"at": 900.0, "radio": ["Fleet bulletin", "The front: NATO has pulled back to the inner-German border. In Geneva, the American ambassador has asked for talks."], "kind": "story"},
 					{"at": 4.0, "radio": ["Commander-in-Chief of the Navy", "Sovetsky Soyuz, the General Staff authorises special warheads against naval targets at sea. The decision is yours."]},
 					{"at": 30.0, "radio": ["Kalinin", "Large surface contact bearing two-three-zero, eighty kilometres. It is Missouri."]},
 				],
