@@ -92,7 +92,10 @@ func _spawn_unit(ud: Dictionary):
 		for wp in ud.get("waypoints", []):
 			wps.append(km(wp) + (p - km(ud["pos"])))
 		var opts := {"tag": ud.get("tag", ""), "ai": ud.get("ai", "patrol"), "waypoints": wps, "depth": ud.get("depth", 60.0),
-			"cruise": ud.get("cruise", 0.6), "aggression": ud.get("aggression", 1.0), "zig": ud.get("zig", 0.0)}
+			"aggression": ud.get("aggression", 1.0), "zig": ud.get("zig", 0.0)}
+		# Units hold the speed the mission gives them unless told otherwise.
+		if ud.has("cruise"):
+			opts["cruise"] = ud["cruise"]
 		if ud.has("names") and i < (ud["names"] as Array).size():
 			opts["name"] = ud["names"][i]
 		elif ud.has("name"):

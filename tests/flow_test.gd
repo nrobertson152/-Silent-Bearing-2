@@ -129,6 +129,35 @@ func _run() -> void:
 	m._debrief_choice("menu")
 	await frames(2)
 	check(m.state == "menu", "free battle debrief back to the menu")
+	# Submarine: control room, periscope, orders, decoys.
+	m.side = "us"
+	m.mode = "campaign"
+	m.idx = 1
+	m.start_mission(Campaigns.mission("us", 1).duplicate(true))
+	await frames(5)
+	var gm = m.game
+	check(gm.mode == "conn" and gm.conn.visible and m.get_viewport().disable_3d, "submarine opens in the control room (3D off)")
+	for j in 30:
+		gm.w.step(1.0)
+		await process_frame
+	gm.conn._act("depth:18")
+	gm.conn._act("bell:1")
+	gm.conn._act("rudder:15")
+	gm.conn._act("next")
+	gm.conn._act("ammo")
+	check(gm.player.depth_order == 18.0 and gm.player.rudder_order == 15.0, "control room orders reach the helm and planes")
+	gm.launch_decoy()
+	check(gm.decoys == 5, "decoy launched")
+	gm.set_mode("scope")
+	await frames(3)
+	check(gm.mode == "scope" and gm.periscope.visible and not m.get_viewport().disable_3d, "periscope view")
+	gm.zoom = true
+	await frames(3)
+	gm.set_mode("conn")
+	await frames(2)
+	m._leave()
+	await frames(2)
+	check(not m.get_viewport().disable_3d, "3D drawing restored after leaving the submarine")
 	# Every visual effect runs (they only fail at runtime, when something burns).
 	m.start_mission(Skirmish.build("bb61", "sag", 0, 2, 3.0))
 	await frames(3)

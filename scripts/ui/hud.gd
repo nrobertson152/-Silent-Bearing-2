@@ -31,7 +31,8 @@ const HELP := [
 	"Space                    Launch missile / torpedo at the target",
 	"Q                        Air defence AUTO / HOLD     R  Radar on / off",
 	"G                        General quarters alarm      H  Ship's whistle",
-	"PgUp / PgDn              Submarine depth order       P  Periscope",
+	"PgUp / PgDn              Submarine depth order       P  Periscope (subs)",
+	"V (submarine)            Control room / outside view N  Decoy (subs)",
 	"1-9 on the plant panel   Start / stop gas turbines or light boilers (bridge)",
 	". and ,                  Time compression            Esc  Pause",
 	"",
@@ -81,7 +82,16 @@ func _draw() -> void:
 		return
 	var vs := get_viewport_rect().size
 	var p = g.player
-	if g.mode != "map":
+	if g.mode == "conn":
+		_messages(Vector2(24, vs.y - 330))
+		if big_t > 0.0:
+			S.text(self, big_msg, Vector2(0, vs.y * 0.3), 38, Color(S.AMBER, clampf(big_t, 0.0, 1.0)), HORIZONTAL_ALIGNMENT_CENTER, vs.x, S.heavy())
+		if hint_t > 0.0:
+			S.text(self, hint, Vector2(0, vs.y - 40), 20, Color(S.TEXT, clampf(hint_t, 0, 1)), HORIZONTAL_ALIGNMENT_CENTER, vs.x)
+		if help:
+			_help(vs)
+		return
+	if g.mode != "map" and g.mode != "scope":
 		_crosshair(vs)
 		_compass(vs)
 	_ship_panel(Rect2(14, 14, 400, 296), p)

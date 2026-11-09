@@ -13,6 +13,7 @@ extends Node
 ##   --hour H            local time (sandbox, or override a mission's)
 ##   --vis KM            override a mission's visibility
 ##   --at X Y            put your ship X km east, Y km north of the mission origin
+##   --depth M           put your submarine at M metres
 
 const Game := preload("res://scripts/game.gd")
 const S := preload("res://scripts/ui/style.gd")
@@ -131,6 +132,9 @@ func _parse_args() -> void:
 			"--at":
 				args["at"] = Vector2(float(a[i + 1]), float(a[i + 2]))
 				i += 2
+			"--depth":
+				args["depth"] = float(a[i + 1])
+				i += 1
 		i += 1
 
 
@@ -336,6 +340,10 @@ func start_mission(def: Dictionary) -> void:
 	if args.has("at"):
 		var at: Vector2 = args["at"]
 		game.player.pos = Vector3(at.x * 1000.0, game.player.pos.y, -at.y * 1000.0)
+	if args.has("depth") and game.player.is_sub:
+		game.player.depth = float(args["depth"])
+		game.player.depth_order = game.player.depth
+		game.player.pos.y = -game.player.depth
 
 
 func _on_pause() -> void:

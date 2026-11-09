@@ -16,6 +16,8 @@ const Sfx := preload("res://scripts/audio/sfx.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const Weapons := preload("res://scripts/data/weapons.gd")
 const Terrain := preload("res://scripts/view/terrain.gd")
+const SubConn := preload("res://scripts/ui/sub_conn.gd")
+const Periscope := preload("res://scripts/ui/periscope.gd")
 
 const STEP := 1.0 / 30.0
 
@@ -66,6 +68,11 @@ var day := 240
 var smoke_ok := true
 var frozen := false
 var auto_exit := -1.0
+var conn
+var periscope
+var scope_yaw := 0.0
+var scope_wash := 0.0
+var decoys := 6
 
 
 func start(def: Dictionary) -> void:
@@ -119,11 +126,26 @@ func start(def: Dictionary) -> void:
 	if not player.is_sub:
 		bridge = Bridge.new()
 		bridge.setup(self, player, pn)
+	else:
+		periscope = Periscope.new()
+		periscope.g = self
+		periscope.visible = false
+		canvas.add_child(periscope)
+		canvas.move_child(periscope, 0)
+		conn = SubConn.new()
+		conn.g = self
+		conn.visible = false
+		canvas.add_child(conn)
+		canvas.move_child(conn, 1)
 	orbit_dist = player.L * 2.4
 	orbit_yaw = U.wrap360(player.heading + 25.0)
 	_select_group(_first_group())
 	Settings.apply_viewport(get_viewport())
-	set_mode("bridge" if bridge != null and def.get("start_view", "bridge") == "bridge" else "external")
+	var sv: String = def.get("start_view", "bridge")
+	if player.is_sub:
+		set_mode(sv if sv in ["external", "scope"] else "conn")
+	else:
+		set_mode("bridge" if bridge != null and sv == "bridge" else "external")
 	hud.banner(def.get("title", ""), 5.0)
 	hud.message("", def.get("location", ""), S.MUTED)
 	if def.has("start_radio"):
@@ -161,14 +183,25 @@ func view_bearing() -> float:
 # ------------------------------------------------------------------ modes
 func set_mode(m: String) -> void:
 	if m == "bridge" and bridge == null:
+		m = "conn" if conn != null else "external"
+	if (m == "conn" or m == "scope") and conn == null:
 		m = "external"
+	if m == "sight" and player.is_sub:
+		m = "scope"
 	if mode != "map":
 		prev_mode = mode
+	if m == "scope" and mode != "scope":
+		scope_yaw = player.heading
 	mode = m
 	tac.visible = m == "map"
 	if bridge != null:
 		bridge.set_active(m == "bridge")
-	if m == "external" or m == "sight":
+	if conn != null:
+		conn.visible = m == "conn"
+		periscope.visible = m == "scope"
+	# The control room covers the whole screen: skip drawing the 3D world.
+	get_viewport().disable_3d = m == "conn"
+	if m == "external" or m == "sight" or m == "scope":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -251,6 +284,17 @@ func _camera(delta: float) -> void:
 			cam.global_position = p
 			cam.global_transform.basis = Basis.looking_at(look, Vector3.UP)
 			cam.fov = lerpf(cam.fov, 12.0 if zoom else 60.0, clampf(delta * 8.0, 0.0, 1.0))
+		"scope", "conn":
+			var sub: Dictionary = player.cls.get("sub", {})
+			var aft: float = player.L * 0.5 - float(sub.get("sail_x", player.L * 0.25)) - 2.0
+			var head: Vector3 = player.pos + player.fwd() * aft
+			var up: float = 20.0 - player.depth
+			var sea: float = ocean.height(head.x, head.z)
+			cam.global_position = Vector3(head.x, up + sea * 0.3, head.z)
+			scope_wash = clampf((sea - up + 0.6) * 0.8, 0.0, 1.0) if up > -0.5 else 0.0
+			var yaw := deg_to_rad(scope_yaw)
+			cam.global_transform.basis = Basis.looking_at(Vector3(sin(yaw), -0.004, -cos(yaw)), Vector3.UP)
+			cam.fov = lerpf(cam.fov, 6.0 if zoom else 26.0, clampf(delta * 8.0, 0.0, 1.0))
 		"sight":
 			var br: Dictionary = pn.get_meta("bridge")
 			var top := Vector3(0, float(br.get("y", player.deck_h() + 8.0)) + float(br.get("h", 3.0)) + 3.0, float(br.get("z0", -player.L * 0.2)) + 4.0)
@@ -440,6 +484,24 @@ func designate() -> void:
 		sfx.play("beep")
 
 
+## The periscope head is under water below about 20 m keel depth.
+func scope_under() -> bool:
+	return player.is_sub and player.depth > 20.5
+
+
+## Submarine noisemaker: may pull an incoming homing torpedo off.
+func launch_decoy() -> void:
+	if not player.is_sub:
+		return
+	if decoys <= 0:
+		hud.show_hint("No decoys left")
+		return
+	decoys -= 1
+	w.sub_decoy(player)
+	sfx.play("click")
+	hud.message("Weapons", "Decoy away. %d left." % decoys, S.AMBER)
+
+
 func set_target(e) -> void:
 	if e != target:
 		fc_q = 0.0
@@ -458,6 +520,8 @@ func _unhandled_input(ev: InputEvent) -> void:
 			"external":
 				orbit_yaw = U.wrap360(orbit_yaw + ev.relative.x * sens)
 				orbit_pitch = clampf(orbit_pitch - ev.relative.y * sens * inv * (0.35 if orbit_pitch > -3.0 else 1.0), -60.0, 15.0)
+			"scope":
+				scope_yaw = U.wrap360(scope_yaw + ev.relative.x * sens * (0.06 if zoom else 0.25))
 			"sight":
 				sight_yaw = U.wrap360(sight_yaw + ev.relative.x * sens * 0.15)
 				sight_pitch = clampf(sight_pitch - ev.relative.y * sens * 0.15 * inv, -8.0, 30.0)
@@ -488,9 +552,17 @@ func _unhandled_input(ev: InputEvent) -> void:
 		KEY_F1:
 			hud.help = not hud.help
 		KEY_V:
-			set_mode("external" if mode == "bridge" else ("bridge" if mode == "external" else "external"))
+			if conn != null:
+				set_mode("external" if mode == "conn" else "conn")
+			else:
+				set_mode("external" if mode == "bridge" else ("bridge" if mode == "external" else "external"))
 		KEY_B:
 			set_mode("sight" if mode != "sight" else prev_mode)
+		KEY_P:
+			if conn != null:
+				set_mode("scope" if mode != "scope" else "conn")
+		KEY_N:
+			launch_decoy()
 		KEY_M, KEY_TAB:
 			set_mode("map" if mode != "map" else prev_mode)
 		KEY_W, KEY_UP:
@@ -522,7 +594,10 @@ func _unhandled_input(ev: InputEvent) -> void:
 		KEY_Z:
 			_cycle_ammo()
 		KEY_T:
-			designate()
+			if mode == "conn" and conn != null:
+				conn.next_target()
+			else:
+				designate()
 		KEY_F:
 			director = not director
 			hud.show_hint("Director %s" % ("ON: guns follow the fire-control lead" if director else "OFF: guns follow your crosshair"))
@@ -568,6 +643,11 @@ func _mouse_button(ev: InputEventMouseButton) -> void:
 				orbit_dist = maxf(player.L * 0.6, orbit_dist * 0.88)
 			elif ev.button_index == MOUSE_BUTTON_WHEEL_DOWN and ev.pressed and mode == "external":
 				orbit_dist = minf(player.L * 14.0, orbit_dist * 1.14)
+		"scope":
+			if ev.pressed and (ev.button_index == MOUSE_BUTTON_RIGHT or ev.button_index == MOUSE_BUTTON_WHEEL_UP or ev.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+				zoom = ev.button_index == MOUSE_BUTTON_WHEEL_UP or (ev.button_index == MOUSE_BUTTON_RIGHT and not zoom)
+			elif ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+				_launch()
 		"bridge":
 			if bridge != null:
 				bridge.mouse_button(ev)
@@ -674,3 +754,4 @@ func _event(ev: Dictionary) -> void:
 
 func shutdown() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_viewport().disable_3d = false
