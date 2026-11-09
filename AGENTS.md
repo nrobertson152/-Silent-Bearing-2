@@ -16,7 +16,9 @@ assets.
   (`tests/run_tests.gd`). The view (`scripts/view/`, `scripts/bridge/`) only reads sim state and events.
 - Ship, weapon and aircraft figures in `scripts/data/` follow published data (1988 configurations).
   Comment any value adjusted for play.
-- Before merging: `tools/check_scripts.gd` compiles everything, `tests/run_tests.gd` passes, and the
-  battle smoke runs in CI finish without `SCRIPT ERROR`.
+- Before merging: `tools/check_scripts.gd` compiles everything, `tests/run_tests.gd` and
+  `tests/flow_test.gd` pass, and the battle and mission smoke runs in CI finish without `SCRIPT ERROR`.
+- Runtime-only code paths (effects, screens) belong in `tests/flow_test.gd`, because a script error
+  there only shows up when the path actually runs.
 - Keep the Forward+ look working with the automatic OpenGL fallback in mind: no feature should be
   required only by Vulkan.

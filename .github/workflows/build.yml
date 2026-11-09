@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download Godot
         run: |
-          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
       - name: Import project
@@ -37,18 +37,40 @@ jobs:
           if grep -q "SCRIPT ERROR" smoke.log || [ "$(grep -c 'SMOKE OK' smoke.log)" -lt 6 ]; then
             echo "::error::A battle failed to run cleanly"; exit 1
           fi
+      - name: Smoke-run campaign missions with coastlines and shore batteries
+        run: |
+          for m in us1 us5 us7 su3 su4 su6; do
+            ./godot --headless --path . -- --mission $m --warp 8 --smoke 90 2>&1 | tee -a missions.log
+          done
+          if grep -q "SCRIPT ERROR" missions.log || [ "$(grep -c 'SMOKE OK' missions.log)" -lt 6 ]; then
+            echo "::error::A campaign mission failed to run cleanly"; exit 1
+          fi
+      - name: Game flow (menus, campaign, debrief, every mission)
+        run: |
+          ./godot --headless --path . -s tests/flow_test.gd 2>&1 | tee flow.log
+          if grep -q "SCRIPT ERROR" flow.log || ! grep -q "FLOW OK" flow.log; then
+            echo "::error::The game flow test failed"; exit 1
+          fi
 
   export:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache export templates
+        uses: actions/cache@v4
+        with:
+          path: templates.tpz
+          key: godot-templates-${{ env.GODOT_VERSION }}
       - name: Download Godot and export templates
         run: |
-          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
-          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          if ! unzip -tq templates.tpz >/dev/null 2>&1; then
+            rm -f templates.tpz
+            curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          fi
           unzip -q templates.tpz
           mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mv templates/linux_release.x86_64 templates/windows_release_x86_64.exe templates/version.txt \

@@ -13,6 +13,7 @@ var air := []
 var muns := []
 var ground := []
 var land := []
+var terrain: SimTerrain = null
 var events := []
 var player = null
 var rng := RandomNumberGenerator.new()
@@ -190,13 +191,7 @@ func _sensors() -> void:
 			for f in mine:
 				var d := U.flat_dist(f.pos, e.pos)
 				if e.is_sub and e.depth > 14.0:
-					var s: float = f.sonar * f.mod_hp("sonar") * 7000.0 + f.towed * 15000.0
-					if f.is_sub:
-						s = f.sonar * 22000.0
-					var en := 0.35 + absf(e.speed) / maxf(e.max_speed, 1.0) * 1.4
-					var own := 0.6 + absf(f.speed) / maxf(f.max_speed, 1.0) * 0.9
-					var layer := 0.55 if (f.depth < 80.0) != (e.depth < 80.0) else 1.0
-					if d < s * en / own * layer:
+					if d < sonar_range(f, e):
 						seen = true
 				else:
 					var hz := U.horizon(f.mast_h() if not f.is_sub else 1.5, e.mast_h())
@@ -210,8 +205,7 @@ func _sensors() -> void:
 					if mineral > 0.0 and not e.emcon and d < mineral:
 						seen = true
 					if f.is_sub and f.depth > 14.0:
-						var ps = f.sonar * 26000.0 * (0.45 + absf(e.speed) / maxf(e.max_speed, 1.0))
-						if d < ps:
+						if d < sonar_range(f, e):
 							seen = true
 				if seen:
 					break
@@ -240,6 +234,21 @@ func _sensors() -> void:
 				if not known_air[team].has(a.uid) and player != null and team == player.side:
 					emit({"t": "air_contact", "air": a})
 				known_air[team][a.uid] = t
+
+
+## Passive sonar detection range of unit f against unit e, in metres. Noisier
+## (faster) targets are heard further; own speed deafens; a submarine on the
+## other side of the thermal layer (about 80 m) is harder to hear.
+func sonar_range(f, e) -> float:
+	if e.is_sub and e.depth > 14.0:
+		var s: float = f.sonar * f.mod_hp("sonar") * 7000.0 + f.towed * 15000.0
+		if f.is_sub:
+			s = f.sonar * 22000.0
+		var en := 0.35 + absf(e.speed) / maxf(e.max_speed, 1.0) * 1.4
+		var own := 0.6 + absf(f.speed) / maxf(f.max_speed, 1.0) * 0.9
+		var layer := 0.55 if (f.depth < 80.0) != (e.depth < 80.0) else 1.0
+		return s * en / own * layer
+	return f.sonar * 26000.0 * (0.45 + absf(e.speed) / maxf(e.max_speed, 1.0))
 
 
 func known_to(team: String, u) -> bool:
@@ -346,7 +355,7 @@ func shell_collide(m, p0: Vector3, p1: Vector3):
 			stats["hits"] += 1 if m.player_fired else 0
 			SimDamage.shell_hit(self, u, m, wp)
 			return u
-	if not land.is_empty():
+	if terrain != null:
 		var lh := land_h(p1.x, p1.z)
 		if lh > 0.0 and p1.y < lh:
 			m.alive = false
@@ -466,6 +475,8 @@ func magazine_explosion(u, comp: int) -> void:
 
 func nuke(p: Vector3, kt: float, team: String) -> void:
 	var r := 950.0 * pow(kt / 15.0, 1.0 / 3.0)
+	if player != null and team == player.side:
+		stats["nuclear"] = int(stats.get("nuclear", 0)) + 1
 	emit({"t": "nuke", "pos": Vector3(p.x, 0, p.z), "kt": kt, "r": r, "side": team})
 	for u in units:
 		if not u.alive():
@@ -493,10 +504,10 @@ func nuke(p: Vector3, kt: float, team: String) -> void:
 
 
 func _land_check(u) -> void:
-	if land.is_empty() or u.is_sub and u.depth > 30.0:
+	if terrain == null or u.is_sub and u.depth > 30.0:
 		return
 	var bow: Vector3 = u.pos + u.fwd() * u.L * 0.5
-	if land_h(bow.x, bow.z) > -2.0 and is_land(bow.x, bow.z):
+	if land_h(bow.x, bow.z) > -2.0:
 		if absf(u.speed) > 0.5:
 			emit({"t": "aground", "unit": u})
 			u.hp -= u.hp_max * 0.03 * absf(u.speed) / u.max_speed
@@ -506,21 +517,21 @@ func _land_check(u) -> void:
 
 # ------------------------------------------------------------------ terrain
 func is_land(x: float, z: float) -> bool:
-	var p := Vector2(x, z)
-	for poly in land:
-		if Geometry2D.is_point_in_polygon(p, poly["pts"]):
-			return true
-	return false
+	return terrain != null and terrain.height(x, z) > 0.5
 
 
 func land_h(x: float, z: float) -> float:
-	var p := Vector2(x, z)
-	for poly in land:
-		if Geometry2D.is_point_in_polygon(p, poly["pts"]):
-			var h: float = poly.get("h", 40.0)
-			var n := sin(x * 0.0021) * cos(z * 0.0017) * 0.5 + 0.5
-			return h * (0.35 + 0.65 * n)
-	return -1.0
+	return terrain.height(x, z) if terrain != null else -50.0
+
+
+func build_terrain(max_h: float) -> void:
+	if land.is_empty():
+		return
+	var polys := []
+	for l in land:
+		polys.append(l["pts"])
+	terrain = SimTerrain.new()
+	terrain.build(polys, max_h, 66000.0)
 
 
 # ------------------------------------------------------------------ weapons

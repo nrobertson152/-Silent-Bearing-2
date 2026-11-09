@@ -15,12 +15,39 @@ var help := false
 var hint := ""
 var hint_t := 0.0
 
+const HELP := [
+	"CONTROLS",
+	"",
+	"W / S or Up / Down       Engine orders (telegraph bells or throttle)",
+	"A / D or Left / Right    Rudder (hold Shift for hard over), X amidships",
+	"C                        Steer the current heading (helmsman holds course)",
+	"V                        Bridge / outside view      B   Gun director sight",
+	"M or Tab                 Tactical plot (click a contact to target it)",
+	"Mouse                    Look / aim  (bridge: right-drag to look, click controls)",
+	"Left click               Fire selected weapon at the crosshair or lead",
+	"1 - 6                    Weapon group     Z  ammunition / missile type",
+	"T                        Designate target near the crosshair",
+	"F                        Director: guns follow the fire-control lead",
+	"Space                    Launch missile / torpedo at the target",
+	"Q                        Air defence AUTO / HOLD     R  Radar on / off",
+	"G                        General quarters alarm      H  Ship's whistle",
+	"PgUp / PgDn              Submarine depth order       P  Periscope (subs)",
+	"V (submarine)            Control room / outside view N  Decoy (subs)",
+	"1-9 on the plant panel   Start / stop gas turbines or light boilers (bridge)",
+	". and ,                  Time compression            Esc  Pause",
+	"",
+	"Engines: telegraph ships wait for the engine room to answer and must",
+	"pass through STOP before going astern. Gas turbines take ~90 s to start;",
+	"boilers take minutes to raise steam. Ring up more than your lit boilers",
+	"can supply and steam pressure (and speed) will fall.",
+]
+
 const GROUPS := [["main", "1", "MAIN GUNS"], ["sec", "2", "SECONDARY"], ["ashm", "3", "ANTI-SHIP MSL"],
 	["sam", "4", "SAM (MANUAL)"], ["asw", "5", "ASW / TORPEDO"], ["strike", "6", "STRIKE / SPECIAL"]]
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -55,10 +82,19 @@ func _draw() -> void:
 		return
 	var vs := get_viewport_rect().size
 	var p = g.player
-	if g.mode != "map":
+	if g.mode == "conn":
+		_messages(Vector2(24, 92), vs.x * 0.56, 2, true, 2)
+		if big_t > 0.0:
+			S.text(self, big_msg, Vector2(0, vs.y * 0.3), 38, Color(S.AMBER, clampf(big_t, 0.0, 1.0)), HORIZONTAL_ALIGNMENT_CENTER, vs.x, S.heavy())
+		if hint_t > 0.0:
+			S.text(self, hint, Vector2(0, vs.y - 40), 20, Color(S.TEXT, clampf(hint_t, 0, 1)), HORIZONTAL_ALIGNMENT_CENTER, vs.x)
+		if help:
+			_help(vs)
+		return
+	if g.mode != "map" and g.mode != "scope":
 		_crosshair(vs)
 		_compass(vs)
-	_ship_panel(Rect2(14, 14, 400, 268), p)
+	_ship_panel(Rect2(14, 14, 400, 296), p)
 	_damage_panel(Rect2(14, vs.y - 196, 400, 182), p)
 	_weapons_panel(Rect2(vs.x - 444, vs.y - 330, 430, 316), p)
 	_mission_panel(Rect2(vs.x - 444, 14, 430, 230))
@@ -123,9 +159,10 @@ func _ship_panel(r: Rect2, p) -> void:
 	for s in pl.shafts:
 		rpms.append("%d" % int(pl.shaft_rpm(s)))
 	S.text(self, "SHAFT RPM  " + " / ".join(rpms), Vector2(x, ey + 20), 15, S.TEXT)
-	if pl.kind == "steam" and not pl.nuclear:
-		_bar(Rect2(x + 210, ey + 8, r.size.x - 234, 14), pl.steam / 1.05, S.GOOD if pl.steam > 0.85 else S.ALARM, "STEAM", "%d%%" % int(pl.steam / 1.05 * 100))
 	var uy := ey + 42
+	if pl.kind == "steam" and not pl.nuclear:
+		_bar(Rect2(x, ey + 28, r.size.x - 24, 14), pl.steam / 1.05, S.GOOD if pl.steam > 0.85 else S.ALARM, "STEAM PRESSURE", "%d%%" % int(pl.steam / 1.05 * 100))
+		uy = ey + 60
 	var col := 0
 	for i in pl.units.size():
 		var un: Dictionary = pl.units[i]
@@ -159,7 +196,7 @@ func _damage_panel(r: Rect2, p) -> void:
 		var h: float = p.mod_hp(k)
 		var c := S.GOOD if h > 0.7 else (S.AMBER if h > 0.3 else S.ALARM)
 		S.text(self, k.to_upper(), Vector2(mx, y + 100), 13, c)
-		mx += 62
+		mx += S.mono().get_string_size(k.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 14.0
 	if p.sinking:
 		S.text(self, "ABANDON SHIP", Vector2(x, y + 140), 26, S.ALARM, HORIZONTAL_ALIGNMENT_LEFT, -1, S.heavy())
 	elif p.is_sub:
@@ -227,20 +264,35 @@ func _mission_panel(r: Rect2) -> void:
 			var c := S.GOOD if line[2] == "done" else (S.ALARM if line[2] == "failed" else S.TEXT)
 			if line[3]:
 				c = c.darkened(0.25)
-			S.text(self, "%s %s" % [line[0], line[1]], Vector2(x, yy), 14, c, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 24)
-			yy += 20
+			var txt := "%s %s" % [line[0], line[1]]
+			var w := r.size.x - 24
+			draw_multiline_string(S.mono(), Vector2(x, yy), txt, HORIZONTAL_ALIGNMENT_LEFT, w, 14, 3, c)
+			yy += S.mono().get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, w, 14, 3).y + 4.0
 
 
-func _messages(pos: Vector2) -> void:
-	var y := pos.y + 170
+## The radio log. Newest at the bottom, older lines climbing above it; long
+## messages wrap. In the control room a short list runs down from the top.
+func _messages(pos: Vector2, width := 980.0, max_n := 9, downward := false, max_lines := 3) -> void:
+	var f := S.mono()
+	var fh := f.get_height(16)
+	var y := pos.y + (0.0 if downward else 170.0)
+	var n := 0
 	for m in msgs:
 		var a := clampf(1.0 - (float(m["t"]) - 18.0) / 6.0, 0.0, 1.0)
 		if a <= 0.0:
 			continue
+		n += 1
+		if n > max_n:
+			break
 		var from: String = m["from"]
 		var s := ("[%s]  " % from.to_upper() if from != "" else "") + String(m["text"])
-		S.text(self, s, Vector2(pos.x, y), 16, Color(m["col"], a), HORIZONTAL_ALIGNMENT_LEFT, 980)
-		y -= 22
+		var lines := mini(max_lines, maxi(1, int(round(f.get_multiline_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, width, 16, max_lines).y / fh))))
+		var top := y if downward else y - (lines - 1) * fh
+		draw_multiline_string(f, Vector2(pos.x, top), s, HORIZONTAL_ALIGNMENT_LEFT, width, 16, max_lines, Color(m["col"], a))
+		if downward:
+			y = top + lines * fh + 4.0
+		else:
+			y = top - fh - 4.0
 
 
 func _compass(vs: Vector2) -> void:
@@ -314,6 +366,7 @@ func _crosshair(vs: Vector2) -> void:
 			var lc := Color(S.AMBER, 0.4 + 0.6 * g.fc_q)
 			draw_arc(lp, 9.0, 0, TAU, 20, lc, 2.0)
 			draw_line(lp + Vector2(-14, 0), lp + Vector2(14, 0), lc, 1.0)
+	var used := []
 	for e in g.w.units:
 		if e == g.player or e == tg or not e.alive() or not g.w.known_to(g.player.side, e):
 			continue
@@ -328,37 +381,23 @@ func _crosshair(vs: Vector2) -> void:
 		if e.navy == "merchant":
 			col = Color(0.8, 0.8, 0.7, 0.7)
 		draw_rect(Rect2(sp - Vector2(5, 5), Vector2(10, 10)), col, false, 1.5)
-		S.text(self, "%s %s" % [e.cls.get("class", "").split(" ")[0], U.km(d)], sp + Vector2(8, -6), 12, col)
+		var lp := sp + Vector2(8, -6)
+		for tries in 6:
+			var clash := false
+			for q: Vector2 in used:
+				if absf(q.x - lp.x) < 110.0 and absf(q.y - lp.y) < 13.0:
+					clash = true
+			if not clash:
+				break
+			lp.y += 14.0
+		used.append(lp)
+		S.text(self, "%s %s" % [e.cls.get("class", "").split(" ")[0], U.km(d)], lp, 12, col)
 
 
 func _help(vs: Vector2) -> void:
 	var r := Rect2(vs.x * 0.5 - 430, 120, 860, 760)
 	S.panel(self, r, S.BG)
-	var lines := [
-		"CONTROLS",
-		"",
-		"W / S or Up / Down       Engine orders (telegraph bells or throttle)",
-		"A / D or Left / Right    Rudder (hold Shift for hard over), X amidships",
-		"C                        Steer the current heading (helmsman holds course)",
-		"V                        Bridge / outside view      B   Gun director sight",
-		"M or Tab                 Tactical plot (click a contact to target it)",
-		"Mouse                    Look / aim  (bridge: right-drag to look, click controls)",
-		"Left click               Fire selected weapon at the crosshair or lead",
-		"1 - 6                    Weapon group     Z  ammunition / missile type",
-		"T                        Designate target near the crosshair",
-		"F                        Director: guns follow the fire-control lead",
-		"Space                    Launch missile / torpedo at the target",
-		"Q                        Air defence AUTO / HOLD     R  Radar on / off",
-		"G                        General quarters alarm      H  Ship's whistle",
-		"PgUp / PgDn              Submarine depth order       P  Periscope",
-		"1-9 on the plant panel   Start / stop gas turbines or light boilers (bridge)",
-		". and ,                  Time compression            Esc  Pause",
-		"",
-		"Engines: telegraph ships wait for the engine room to answer and must",
-		"pass through STOP before going astern. Gas turbines take ~90 s to start;",
-		"boilers take minutes to raise steam. Ring up more than your lit boilers",
-		"can supply and steam pressure (and speed) will fall.",
-	]
+	var lines := HELP
 	var y := r.position.y + 40
 	for l in lines:
 		S.text(self, l, Vector2(r.position.x + 30, y), 17 if l != "CONTROLS" else 24, S.AMBER if l == "CONTROLS" else S.TEXT)

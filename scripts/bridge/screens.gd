@@ -11,6 +11,8 @@ var sweep := 0.0
 var range_km := 24.0
 var track := []
 var track_t := 0.0
+## Land, triangulated once: [points, indices, closed outline].
+var _land := []
 
 
 func _process(delta: float) -> void:
@@ -98,14 +100,20 @@ func _chart() -> void:
 		draw_line(Vector2(x, 0), Vector2(x, s.y), Color(0.55, 0.6, 0.65, 0.35), 1.0)
 		var y := c.y + i * 5000.0 * k
 		draw_line(Vector2(0, y), Vector2(s.x, y), Color(0.55, 0.6, 0.65, 0.35), 1.0)
-	for land in g.w.land:
-		var pts := PackedVector2Array()
-		for q in land["pts"]:
-			pts.append(c + Vector2(q.x - p.pos.x, q.y - p.pos.z) * k)
-		if pts.size() > 2:
-			draw_colored_polygon(pts, Color(0.82, 0.74, 0.55))
-			pts.append(pts[0])
-			draw_polyline(pts, Color(0.35, 0.3, 0.2), 1.5)
+	if _land.is_empty() and not g.w.land.is_empty():
+		for land in g.w.land:
+			var pts: PackedVector2Array = land["pts"]
+			if pts.size() < 3:
+				continue
+			var outline := pts.duplicate()
+			outline.append(pts[0])
+			_land.append([pts, Geometry2D.triangulate_polygon(pts), outline])
+	draw_set_transform(c - Vector2(p.pos.x, p.pos.z) * k, 0.0, Vector2(k, k))
+	for l: Array in _land:
+		if not (l[1] as PackedInt32Array).is_empty():
+			RenderingServer.canvas_item_add_triangle_array(get_canvas_item(), l[1], l[0], PackedColorArray([Color(0.82, 0.74, 0.55)]))
+		draw_polyline(l[2], Color(0.35, 0.3, 0.2), 1.5 / k)
+	draw_set_transform_matrix(Transform2D.IDENTITY)
 	if track.size() > 1:
 		var tp := PackedVector2Array()
 		for q in track:

@@ -269,7 +269,6 @@ func fire_column(parent: Node3D, lpos: Vector3, scale_m: float) -> Array:
 	var q := QuadMesh.new()
 	q.material = mat("smoke")
 	sm.draw_pass_1 = q
-	sm.scale_amount_min = 1.0
 	parent.add_child(sm)
 	sm.position = lpos
 	out.append(sm)
