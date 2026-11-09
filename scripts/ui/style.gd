@@ -14,6 +14,8 @@ const US_BLUE := Color(0.45, 0.66, 1.0)
 const SU_RED := Color(1.0, 0.4, 0.33)
 const BRASS := Color(0.82, 0.66, 0.36)
 
+## Called on every button press made with button(); main sets it to a click.
+static var on_click := Callable()
 static var _mono: Font
 static var _sans: Font
 static var _stencil: Font
@@ -99,6 +101,9 @@ static func button(text: String, cb: Callable, size := 18, min_w := 0.0) -> Butt
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_size_override("font_size", size)
+	b.pressed.connect(func():
+		if on_click.is_valid():
+			on_click.call())
 	b.pressed.connect(cb)
 	if min_w > 0.0:
 		b.custom_minimum_size = Vector2(min_w, 0)

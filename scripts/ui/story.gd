@@ -24,6 +24,9 @@ var map
 var hint: Label
 var t := 0.0
 var _over := false
+## Called every few characters as the text types out.
+var type_sound := Callable()
+var _typed := 0
 
 
 ## map_side shows the strategic map behind the text, with front_state.
@@ -99,6 +102,7 @@ func _show(i: int) -> void:
 		bodies.append(body)
 		total += String(b[1]).length()
 	shown = 0.0
+	_typed = 0
 	_update_text()
 
 
@@ -120,6 +124,10 @@ func _process(delta: float) -> void:
 	if shown < total:
 		shown = minf(shown + delta * CPS, float(total))
 		_update_text()
+		if int(shown) - _typed >= 3:
+			_typed = int(shown)
+			if type_sound.is_valid():
+				type_sound.call()
 
 
 func advance() -> void:

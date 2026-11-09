@@ -52,6 +52,9 @@ func _ready() -> void:
 	_row(grid, "Volume", _slider(0.0, 1.0, Settings.volume, func(x: float):
 		Settings.volume = x
 		_apply()))
+	_row(grid, "Music", _slider(0.0, 1.0, Settings.music, func(x: float):
+		Settings.music = x
+		_apply()))
 	_row(grid, "Mouse sensitivity", _slider(0.25, 3.0, Settings.mouse_sens, func(x: float):
 		Settings.mouse_sens = x
 		_apply()))

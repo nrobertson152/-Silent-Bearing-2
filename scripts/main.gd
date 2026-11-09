@@ -32,6 +32,7 @@ const Debrief := preload("res://scripts/ui/debrief.gd")
 const SettingsPanel := preload("res://scripts/ui/settings_panel.gd")
 const PauseMenu := preload("res://scripts/ui/pause_menu.gd")
 const FreeBattle := preload("res://scripts/ui/free_battle.gd")
+const UiAudio := preload("res://scripts/audio/ui_audio.gd")
 
 ## Backdrops for the main menu: [class, side, local hour, latitude, weather].
 const MENU_SCENES := [
@@ -47,6 +48,7 @@ const SIDE_NAMES := {"us": "UNITED STATES NAVY", "su": "SOVIET NAVY"}
 
 var game = null
 var showcase = null
+var ui_audio
 var layer: CanvasLayer
 var screen: Control = null
 var overlay: Control = null
@@ -72,6 +74,9 @@ func _ready() -> void:
 	layer = CanvasLayer.new()
 	layer.layer = 10
 	add_child(layer)
+	ui_audio = UiAudio.new()
+	add_child(ui_audio)
+	S.on_click = ui_audio.click
 	_parse_args()
 	Settings.apply_viewport(get_viewport())
 	if args.has("sandbox"):
@@ -220,6 +225,7 @@ func go_menu(new_ship := true) -> void:
 	var m := Menu.new()
 	m.action.connect(_menu_action)
 	_set_screen(m)
+	ui_audio.set_ambience(true, true)
 
 
 func _menu_action(what: String, s: String) -> void:
@@ -257,6 +263,7 @@ func go_map(sel := -1) -> void:
 	ms.intro.connect(func(): go_story(_intro_pages(side), _front(side, 0), 0, func(): go_map(ms.sel)))
 	ms.back.connect(func(): go_menu())
 	_set_screen(ms)
+	ui_audio.set_ambience(true, false)
 
 
 func go_story(pages: Array, front: Dictionary, highlight: int, next: Callable) -> void:
@@ -269,7 +276,9 @@ func go_story(pages: Array, front: Dictionary, highlight: int, next: Callable) -
 	var st := Story.new()
 	st.setup(pages, side, front, highlight)
 	st.done.connect(next)
+	st.type_sound = ui_audio.type_key
 	_set_screen(st)
+	ui_audio.set_ambience(true, false)
 
 
 func go_briefing(i: int) -> void:
@@ -283,6 +292,7 @@ func go_briefing(i: int) -> void:
 	b.sail.connect(func(): start_mission(current))
 	b.back.connect(func(): go_map(i))
 	_set_screen(b)
+	ui_audio.set_ambience(true, true)
 
 
 func go_free() -> void:
@@ -300,6 +310,7 @@ func go_free() -> void:
 		start_mission(d))
 	fb.back.connect(func(): go_menu())
 	_set_screen(fb)
+	ui_audio.set_ambience(true, true)
 
 
 func _free_ship(cls: String) -> void:
@@ -330,6 +341,7 @@ func start_mission(def: Dictionary) -> void:
 	_clear_screen()
 	_clear_showcase()
 	_clear_game()
+	ui_audio.set_ambience(false, false)
 	game = Game.new()
 	add_child(game)
 	game.start(def.duplicate(true))
@@ -411,6 +423,7 @@ func _on_finished(result: String, stats: Dictionary) -> void:
 	d.setup(_debrief_info(result, stats))
 	d.choice.connect(_debrief_choice)
 	_set_screen(d)
+	ui_audio.set_ambience(true, false)
 
 
 func _debrief_info(result: String, stats: Dictionary) -> Dictionary:
