@@ -112,8 +112,8 @@ func apply_quality() -> void:
 
 func _apply_weather() -> void:
 	var vis_m: float = maxf(float(weather["vis"]), 0.5) * 1000.0
-	env.fog_density = 2.6 / vis_m
-	env.volumetric_fog_density = 0.0008 + 0.012 / maxf(float(weather["vis"]), 1.0)
+	env.fog_density = 2.2 / vis_m
+	env.volumetric_fog_density = 0.00012 + 0.0025 / maxf(float(weather["vis"]), 1.0)
 	sky_mat.set_shader_parameter("cloud_cover", weather["clouds"])
 	sky_mat.set_shader_parameter("cloud_dark", weather["dark"])
 	sky_mat.set_shader_parameter("haze", clampf(8.0 / maxf(float(weather["vis"]), 1.0), 0.1, 1.0))

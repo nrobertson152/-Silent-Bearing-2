@@ -139,7 +139,8 @@ void fragment() {
 	vec2 wd = normalize(wind);
 	vec2 fq = vec2(dot(wpos.xz, wd), dot(wpos.xz, vec2(-wd.y, wd.x)));
 	float fnz = noise(fq * vec2(0.25, 0.9) + t * 0.05) * 0.55 + noise(fq * vec2(1.1, 3.2) - t * 0.1) * 0.45;
-	float foam = clamp(fold * smoothstep(0.35, 0.75, fnz) * 1.6 * foam_amount, 0.0, 1.0);
+	float patch = smoothstep(0.45, 0.85, noise(wpos.xz * 0.006 + vec2(t * 0.002, 0.0)) * 0.7 + noise(wpos.xz * 0.023) * 0.3);
+	float foam = clamp(fold * smoothstep(0.4, 0.8, fnz) * 1.8 * foam_amount * mix(0.15, 1.0, patch), 0.0, 1.0);
 	foam *= 1.0 - smoothstep(1500.0, 6000.0, dist_cam);
 	if (!FRONT_FACING) {
 		NORMAL = -NORMAL;
