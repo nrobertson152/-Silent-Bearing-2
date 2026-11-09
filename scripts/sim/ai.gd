@@ -134,7 +134,8 @@ func _pick_target() -> void:
 		if e.player:
 			d *= 0.85
 		if e.navy == "merchant" and u.navy != "merchant":
-			d *= 1.15
+			# Submarines go for the cargo; warships deal with the escorts first.
+			d *= 0.6 if u.is_sub else 1.15
 		if d < bd:
 			bd = d
 			best = e
@@ -247,9 +248,10 @@ func _weapons() -> void:
 					if m.select_role("sub") and d < float(m.mun().get("range", 9000.0)) * 0.9 and m.ready():
 						w.launch_missile(u, m, target)
 			"tubes":
-				if torp_t <= 0.0 and m.ready() and m.count() > 0:
+				if torp_t <= 0.0 and m.ready() and m.count() > 0 and _torpedoes_at(target) < (2 if target.disp > 9000.0 else 1):
 					var r: float = m.mun().get("range", 10000.0)
-					if d < r * (0.45 if not u.is_sub else 0.6):
+					# Submarines close to a sure firing range before they shoot.
+					if d < (r * 0.45 if not u.is_sub else minf(r * 0.6, 12000.0)):
 						if u.is_sub:
 							_pick_torpedo(m, target)
 						if w.launch_torpedo(u, m, target):
@@ -257,6 +259,16 @@ func _weapons() -> void:
 			"rocket":
 				if target.is_sub and m.ready() and d < float(m.mun().get("range", 3000.0)) and m.can_bear(target.pos):
 					w.fire_rbu(u, m, target.pos, target.depth)
+
+
+## Our torpedoes still running at this target: one at a time is the rule,
+## two for a big ship.
+func _torpedoes_at(tgt) -> int:
+	var n := 0
+	for mu in w.muns:
+		if mu.alive and mu.kind == "torpedo" and mu.shooter == u and mu.target == tgt:
+			n += 1
+	return n
 
 
 func _pick_torpedo(m, tgt) -> void:

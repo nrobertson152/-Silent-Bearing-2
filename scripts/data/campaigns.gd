@@ -334,9 +334,9 @@ const CAMPAIGNS := {
 				"lat": 69.40, "lon": 33.75, "geo": "su1", "land_h": 250.0, "location": "Mouth of the Kola Bay",
 				"weather": {"sea": 2.0, "wind": 200.0, "vis": 15.0, "clouds": 0.25, "aurora": 1.0},
 				"briefing": "Two ammunition transports are leaving the Kola Bay tonight for the army at the Titovka River. An American submarine has been laying mines and attacking shipping off the inlet, and carrier aircraft raid the coast at dawn.\n\nEscort the transports clear of the inlet. Find the American submarine if you can.",
-				"intel": "One Los Angeles-class nuclear submarine (very quiet at low speed). Carrier-based A-6E Intruders with Harpoon missiles expected after 0330.",
+				"intel": "One Los Angeles-class nuclear submarine (very quiet at low speed). A pair of carrier-based A-6E Intruders with Harpoon missiles expected after 0330.",
 				"support": "PVO MiG-31 interceptors from Monchegorsk. A Ka-27 helicopter from Severomorsk is searching for the submarine.",
-				"tip": "Your Osa missiles and twin 76 mm guns defend against air attack automatically. The URPK-4 Metel (group 5) carries a homing torpedo to a submarine 50 km away; the RBU-6000 rockets are for close range. Stop or slow down to hear the submarine.",
+				"tip": "Your Osa missiles and twin 76 mm guns defend against air attack automatically. When CIC reports the submarine, select group 5, press T to designate it and Space to fire: the URPK-4 Metel carries a homing torpedo to a submarine up to 50 km away. The RBU-6000 rockets are for close range. Slow down to hear the submarine.",
 				"player": {"pos": [-2, 6], "hdg": 80.0, "speed": 14.0},
 				"units": [
 					{"cls": "tanker", "side": "su", "pos": [-5, 3], "hdg": 60.0, "speed": 11.0, "tag": "convoy", "ai": "convoy", "waypoints": [[40, 30]], "name": "Dubna"},
@@ -344,9 +344,9 @@ const CAMPAIGNS := {
 					{"cls": "ssn688", "side": "us", "pos": [18, 18], "hdg": 230.0, "speed": 5.0, "depth": 100.0, "tag": "sub", "ai": "patrol", "waypoints": [[5, 12], [20, 20]], "name": "USS Augusta"},
 				],
 				"air": [
-					{"type": "ka27", "side": "su", "pos": [2, 8], "hdg": 60.0, "orbit": [8, 12], "callsign": "Kasatka 12"},
+					{"type": "ka27", "side": "su", "pos": [2, 8], "hdg": 60.0, "orbit": [13, 15], "callsign": "Kasatka 12"},
 					{"type": "mig31", "side": "su", "at": 470.0, "pos": [0, -60], "hdg": 330.0, "n": 2, "orbit": [-40, 40], "callsign": "Sokol 1", "radio": ["Sokol 1", "Sokol-1, pair of MiG-31s airborne from Monchegorsk. We will meet them."]},
-					{"type": "a6", "side": "us", "at": 480.0, "pos": [-200, 200], "hdg": 120.0, "n": 4, "tag": "raid", "radio": ["Coastal radar", "Low-flying aircraft, four, bearing three-one-five, two hundred kilometres. Intruders."]},
+					{"type": "a6", "side": "us", "at": 480.0, "pos": [-200, 200], "hdg": 120.0, "n": 2, "tag": "raid", "radio": ["Coastal radar", "Low-flying aircraft, a pair, bearing three-one-five, two hundred kilometres. Intruders."]},
 				],
 				"objectives": [
 					{"id": "o1", "text": "Escort the transports clear of the inlet", "type": "protect", "tag": "convoy", "min": 1, "until": 1500.0},

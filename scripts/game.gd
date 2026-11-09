@@ -722,6 +722,15 @@ func _event(ev: Dictionary) -> void:
 		"air_launch":
 			if ev["air"].side != player.side:
 				hud.message("CIC", "Vampire, vampire! %s launching" % ev["air"].name(), S.ALARM)
+		"torpedo_launch":
+			# Sonar hears a torpedo start up within about 16 km.
+			var tp: Vector3 = ev["pos"]
+			var td := U.flat_dist(player.pos, tp)
+			if ev["unit"].side != player.side and td < 16000.0:
+				hud.message("Sonar", "Torpedo in the water! Bearing %s, %s. Turn away and run, or drop a decoy." % [U.p3(U.brg(player.pos, tp)), U.km(td)] if player.is_sub
+					else "Torpedo in the water! Bearing %s, %s. Turn away and ring up full speed." % [U.p3(U.brg(player.pos, tp)), U.km(td)], S.ALARM)
+				hud.banner("TORPEDO IN THE WATER", 3.0)
+				sfx.play("alarm")
 		"intercept":
 			if ev.get("by") == player:
 				hud.message("CIC", "Splash one missile%s" % (" (CIWS)" if ev.get("ciws", false) else ""), S.GOOD)
