@@ -15,12 +15,38 @@ var help := false
 var hint := ""
 var hint_t := 0.0
 
+const HELP := [
+	"CONTROLS",
+	"",
+	"W / S or Up / Down       Engine orders (telegraph bells or throttle)",
+	"A / D or Left / Right    Rudder (hold Shift for hard over), X amidships",
+	"C                        Steer the current heading (helmsman holds course)",
+	"V                        Bridge / outside view      B   Gun director sight",
+	"M or Tab                 Tactical plot (click a contact to target it)",
+	"Mouse                    Look / aim  (bridge: right-drag to look, click controls)",
+	"Left click               Fire selected weapon at the crosshair or lead",
+	"1 - 6                    Weapon group     Z  ammunition / missile type",
+	"T                        Designate target near the crosshair",
+	"F                        Director: guns follow the fire-control lead",
+	"Space                    Launch missile / torpedo at the target",
+	"Q                        Air defence AUTO / HOLD     R  Radar on / off",
+	"G                        General quarters alarm      H  Ship's whistle",
+	"PgUp / PgDn              Submarine depth order       P  Periscope",
+	"1-9 on the plant panel   Start / stop gas turbines or light boilers (bridge)",
+	". and ,                  Time compression            Esc  Pause",
+	"",
+	"Engines: telegraph ships wait for the engine room to answer and must",
+	"pass through STOP before going astern. Gas turbines take ~90 s to start;",
+	"boilers take minutes to raise steam. Ring up more than your lit boilers",
+	"can supply and steam pressure (and speed) will fall.",
+]
+
 const GROUPS := [["main", "1", "MAIN GUNS"], ["sec", "2", "SECONDARY"], ["ashm", "3", "ANTI-SHIP MSL"],
 	["sam", "4", "SAM (MANUAL)"], ["asw", "5", "ASW / TORPEDO"], ["strike", "6", "STRIKE / SPECIAL"]]
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -334,31 +360,7 @@ func _crosshair(vs: Vector2) -> void:
 func _help(vs: Vector2) -> void:
 	var r := Rect2(vs.x * 0.5 - 430, 120, 860, 760)
 	S.panel(self, r, S.BG)
-	var lines := [
-		"CONTROLS",
-		"",
-		"W / S or Up / Down       Engine orders (telegraph bells or throttle)",
-		"A / D or Left / Right    Rudder (hold Shift for hard over), X amidships",
-		"C                        Steer the current heading (helmsman holds course)",
-		"V                        Bridge / outside view      B   Gun director sight",
-		"M or Tab                 Tactical plot (click a contact to target it)",
-		"Mouse                    Look / aim  (bridge: right-drag to look, click controls)",
-		"Left click               Fire selected weapon at the crosshair or lead",
-		"1 - 6                    Weapon group     Z  ammunition / missile type",
-		"T                        Designate target near the crosshair",
-		"F                        Director: guns follow the fire-control lead",
-		"Space                    Launch missile / torpedo at the target",
-		"Q                        Air defence AUTO / HOLD     R  Radar on / off",
-		"G                        General quarters alarm      H  Ship's whistle",
-		"PgUp / PgDn              Submarine depth order       P  Periscope",
-		"1-9 on the plant panel   Start / stop gas turbines or light boilers (bridge)",
-		". and ,                  Time compression            Esc  Pause",
-		"",
-		"Engines: telegraph ships wait for the engine room to answer and must",
-		"pass through STOP before going astern. Gas turbines take ~90 s to start;",
-		"boilers take minutes to raise steam. Ring up more than your lit boilers",
-		"can supply and steam pressure (and speed) will fall.",
-	]
+	var lines := HELP
 	var y := r.position.y + 40
 	for l in lines:
 		S.text(self, l, Vector2(r.position.x + 30, y), 17 if l != "CONTROLS" else 24, S.AMBER if l == "CONTROLS" else S.TEXT)

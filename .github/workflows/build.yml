@@ -37,6 +37,20 @@ jobs:
           if grep -q "SCRIPT ERROR" smoke.log || [ "$(grep -c 'SMOKE OK' smoke.log)" -lt 6 ]; then
             echo "::error::A battle failed to run cleanly"; exit 1
           fi
+      - name: Smoke-run campaign missions with coastlines and shore batteries
+        run: |
+          for m in us1 us5 us7 su3 su4 su6; do
+            ./godot --headless --path . -- --mission $m --warp 8 --smoke 90 2>&1 | tee -a missions.log
+          done
+          if grep -q "SCRIPT ERROR" missions.log || [ "$(grep -c 'SMOKE OK' missions.log)" -lt 6 ]; then
+            echo "::error::A campaign mission failed to run cleanly"; exit 1
+          fi
+      - name: Game flow (menus, campaign, debrief, every mission)
+        run: |
+          ./godot --headless --path . -s tests/flow_test.gd 2>&1 | tee flow.log
+          if grep -q "SCRIPT ERROR" flow.log || ! grep -q "FLOW OK" flow.log; then
+            echo "::error::The game flow test failed"; exit 1
+          fi
 
   export:
     needs: test

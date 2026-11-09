@@ -15,6 +15,7 @@ const Bridge := preload("res://scripts/bridge/bridge.gd")
 const Sfx := preload("res://scripts/audio/sfx.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const Weapons := preload("res://scripts/data/weapons.gd")
+const Terrain := preload("res://scripts/view/terrain.gd")
 
 const STEP := 1.0 / 30.0
 
@@ -31,6 +32,7 @@ var tac
 var bridge
 var sfx
 var canvas: CanvasLayer
+var terrain
 var mode := "external"
 var prev_mode := "external"
 var tc := 1.0
@@ -57,6 +59,7 @@ var firing := false
 var ended := false
 var end_t := 0.0
 var result := ""
+var why := ""
 var gq := false
 var start_hour := 12.0
 var day := 240
@@ -85,6 +88,13 @@ func start(def: Dictionary) -> void:
 	view = WorldView.new()
 	add_child(view)
 	view.setup(w, ocean, atm)
+	if w.terrain != null or not w.ground.is_empty():
+		terrain = Terrain.new()
+		add_child(terrain)
+		if w.terrain != null:
+			terrain.build(w.terrain, float(def.get("lat", 60.0)), int(dt[1]))
+		for gr in w.ground:
+			terrain.add_target(gr)
 	view.set_night(atm.sun_el < 2.0)
 	var wd := deg_to_rad(float(def.get("weather", {}).get("wind", 240.0)) + 180.0)
 	view.fx.wind = Vector3(sin(wd), 0, -cos(wd)) * (2.0 + float(def.get("weather", {}).get("sea", 3.0)))
@@ -199,6 +209,8 @@ func _process(delta: float) -> void:
 	_camera(delta)
 	ocean.follow(cam.global_position, w.t)
 	view.sync(delta, cam.global_position)
+	if terrain != null:
+		terrain.sync(view.fx)
 	if bridge != null:
 		bridge.update(delta)
 	sfx.update_ship(player, delta, mode, cam.global_position)
@@ -654,6 +666,7 @@ func _event(ev: Dictionary) -> void:
 		"mission_end":
 			ended = true
 			result = ev["result"]
+			why = ev["why"]
 			hud.banner("MISSION ACCOMPLISHED" if result == "won" else "MISSION FAILED", 8.0)
 			hud.message("Fleet", ev["why"], S.GOOD if result == "won" else S.ALARM)
 			get_tree().create_timer(6.0).timeout.connect(func(): finished.emit(result, w.stats))

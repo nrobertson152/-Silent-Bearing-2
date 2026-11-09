@@ -33,11 +33,25 @@ func setup() -> void:
 	w.weather = {"vis": wx.get("vis", 25.0), "sea": wx.get("sea", 3.0)}
 	w.awacs[player_side] = def.get("awacs", false)
 	w.awacs["su" if player_side == "us" else "us"] = def.get("enemy_awacs", false)
-	for l in def.get("land", []):
+	var lands: Array = def.get("land", []).duplicate()
+	if def.has("geo"):
+		var f := FileAccess.open("res://data/geo/%s.json" % def["geo"], FileAccess.READ)
+		if f != null:
+			var polys = JSON.parse_string(f.get_as_text())
+			if polys is Array:
+				for poly in polys:
+					lands.append({"pts": poly, "h": def.get("land_h", 120.0)})
+	for l in lands:
 		var pts := PackedVector2Array()
 		for p in l["pts"]:
 			pts.append(Vector2(float(p[0]) * 1000.0, -float(p[1]) * 1000.0))
-		w.land.append({"pts": pts, "h": l.get("h", 40.0), "name": l.get("name", "")})
+		var parts := [pts]
+		if pts.size() > 2 and Geometry2D.triangulate_polygon(pts).is_empty():
+			# Simplified coastlines can cross themselves: untangle into simple polygons.
+			parts = Geometry2D.merge_polygons(pts, PackedVector2Array())
+		for part: PackedVector2Array in parts:
+			w.land.append({"pts": part, "h": l.get("h", 40.0), "name": l.get("name", "")})
+	w.build_terrain(float(def.get("land_h", 140.0)))
 	var pl: Dictionary = def.get("player", {})
 	w.add_unit(def["ship"], player_side, km(pl.get("pos", [0, 0])), float(pl.get("hdg", 0.0)), float(pl.get("speed", 12.0)),
 		{"player": true, "depth": pl.get("depth", 40.0)})
@@ -49,7 +63,9 @@ func setup() -> void:
 		else:
 			_spawn_air(ad)
 	for gd in def.get("ground", []):
-		var g: Dictionary = w.add_ground(gd["name"], km(gd["pos"]) + Vector3(0, float(gd.get("h", 20.0)), 0), gd.get("kind", "target"),
+		var gp := km(gd["pos"])
+		gp.y = maxf(w.land_h(gp.x, gp.z), 2.0) + 2.0 + float(gd.get("h", 0.0)) * 0.1
+		var g: Dictionary = w.add_ground(gd["name"], gp, gd.get("kind", "target"),
 			float(gd.get("hp", 1.0)), gd.get("side", "su" if player_side == "us" else "us"))
 		g["tag"] = gd.get("tag", "")
 	for o in def.get("objectives", []):
@@ -77,7 +93,9 @@ func _spawn_unit(ud: Dictionary):
 			wps.append(km(wp) + (p - km(ud["pos"])))
 		var opts := {"tag": ud.get("tag", ""), "ai": ud.get("ai", "patrol"), "waypoints": wps, "depth": ud.get("depth", 60.0),
 			"cruise": ud.get("cruise", 0.6), "aggression": ud.get("aggression", 1.0), "zig": ud.get("zig", 0.0)}
-		if ud.has("name"):
+		if ud.has("names") and i < (ud["names"] as Array).size():
+			opts["name"] = ud["names"][i]
+		elif ud.has("name"):
 			opts["name"] = ud["name"] if n == 1 else "%s %d" % [ud["name"], i + 1]
 		var u: SimUnit = w.add_unit(ud["cls"], ud.get("side", "su"), p, hdg, float(ud.get("speed", 10.0)), opts)
 		if ud.get("ai", "") == "escort":
@@ -93,6 +111,8 @@ func _spawn_unit(ud: Dictionary):
 
 
 func _find_tag(tag: String):
+	if tag == "player":
+		return w.player
 	for u in w.units:
 		if u.tag == tag and u.alive():
 			return u
@@ -208,6 +228,16 @@ func _evaluate(o: Dictionary) -> String:
 				if arrived >= int(o.get("min", 1)):
 					return "done"
 			return "active"
+		"deny":
+			var us := _units(o["tag"])
+			if us.is_empty():
+				return "active"
+			var p := km(o["pos"])
+			for u in us:
+				if u.alive() and U.flat_dist(u.pos, p) < float(o.get("r", 5.0)) * 1000.0:
+					return "failed"
+			var dead := us.filter(func(u): return not u.alive() or u.destroyed).size()
+			return "done" if dead >= us.size() else "active"
 		"survive":
 			return "done" if w.t >= float(o["time"]) else "active"
 		"bombard":
@@ -247,7 +277,7 @@ func objective_lines() -> Array:
 		var extra := ""
 		if o["type"] == "survive" and o["state"] == "active":
 			extra = "  (%s)" % U.clock(maxf(0.0, float(o["time"]) - w.t))
-		elif o["type"] == "destroy" and o["state"] == "active":
+		elif (o["type"] == "destroy" or o["type"] == "deny") and o["state"] == "active":
 			var us := _units(o["tag"])
 			var dead := us.filter(func(u): return not u.alive() or u.destroyed).size()
 			extra = "  (%d/%d)" % [dead, int(o.get("count", us.size()))]

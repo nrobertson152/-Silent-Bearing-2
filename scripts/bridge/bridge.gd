@@ -685,7 +685,7 @@ func _screen(drawer: Control, c: Vector3, r: float, basis: Basis, size := Vector
 	vp.size = Vector2i(512, 512) if size == Vector2.ZERO else Vector2i(640, int(640 * size.y / size.x))
 	vp.transparent_bg = false
 	vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	drawer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	drawer.custom_minimum_size = Vector2(vp.size)
 	vp.add_child(drawer)
 	root.add_child(vp)
