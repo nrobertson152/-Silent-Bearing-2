@@ -39,6 +39,8 @@ var mode := "external"
 var prev_mode := "external"
 var tc := 1.0
 var acc := 0.0
+## Simulation time of the frame being drawn (between the last two steps).
+var render_t := 0.0
 var orbit_yaw := 200.0
 var orbit_pitch := -6.0
 var orbit_dist := 400.0
@@ -222,12 +224,18 @@ func _process(delta: float) -> void:
 		var steps := 0
 		var dt := STEP if tc <= 4.0 else STEP * 3.0
 		while acc >= dt and steps < 12:
+			view.snapshot()
 			_player_fire_control(dt)
 			w.step(dt)
 			acc -= dt
 			steps += 1
 		if steps >= 12:
 			acc = 0.0
+		view.step_dt = dt
+		view.alpha = clampf(acc / dt, 0.0, 1.0)
+	# Draw the world at a time between the last two steps, so it moves smoothly
+	# at any frame rate.
+	render_t = w.t - (1.0 - view.alpha) * view.step_dt
 	if not w.events.is_empty():
 		for ev in w.events:
 			_event(ev)
@@ -239,10 +247,13 @@ func _process(delta: float) -> void:
 	if absf(hour - atm.hour) > 0.02:
 		atm.set_time(hour)
 		w.night = atm.is_night()
-	atm.update(w.t)
-	_camera(delta)
-	ocean.follow(cam.global_position, w.t)
+	atm.update(render_t)
+	# Ships first, then the camera: on the bridge the camera rides the ship, and
+	# placing it before the ship moved left the bridge a step out of place.
+	ocean.follow(cam.global_position, render_t)
 	view.sync(delta, cam.global_position)
+	_camera(delta)
+	ocean.follow(cam.global_position, render_t)
 	if terrain != null:
 		terrain.sync(view.fx)
 	if bridge != null:

@@ -337,10 +337,18 @@ func _settings_changed() -> void:
 # ------------------------------------------------------------------ missions
 func start_mission(def: Dictionary) -> void:
 	current = def
+	state = "loading"
+	_clear_game()
+	# A loading card first: building the mission (and, the first time, compiling
+	# its shaders) takes a few seconds, and a frozen screen looks like a crash.
+	_set_screen(_loading_card(def))
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if state != "loading" or current != def:
+		return
 	state = "mission"
 	_clear_screen()
 	_clear_showcase()
-	_clear_game()
 	ui_audio.set_ambience(false, false)
 	game = Game.new()
 	add_child(game)
@@ -356,6 +364,27 @@ func start_mission(def: Dictionary) -> void:
 		game.player.depth = float(args["depth"])
 		game.player.depth_order = game.player.depth
 		game.player.pos.y = -game.player.depth
+
+
+func _loading_card(def: Dictionary) -> Control:
+	var c := ColorRect.new()
+	c.color = Color(0.015, 0.02, 0.025)
+	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	c.theme = S.theme()
+	var v := VBoxContainer.new()
+	v.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	v.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	v.grow_vertical = Control.GROW_DIRECTION_BOTH
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 10)
+	c.add_child(v)
+	var t := S.label(String(def.get("title", "")).to_upper(), 46, S.TEXT, S.heavy())
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(t)
+	var l := S.label("Putting to sea...", 20, S.MUTED, S.sans())
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(l)
+	return c
 
 
 func _on_pause() -> void:
