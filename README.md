@@ -13,8 +13,13 @@ the campaign map. The repository contains no binary assets.
 ## Download
 
 Linux and Windows builds are attached to each [release](../../releases). Every pull request also
-produces builds, which you can download from that run's Actions artifacts. Unzip the build and run
-`SilentBearing2.exe` (Windows) or `SilentBearing2.x86_64` (Linux).
+produces builds, which you can download from that run's Actions artifacts.
+
+- **Linux:** `SilentBearing2-x86_64.AppImage` runs on most distributions with nothing to install. Make it
+  executable (`chmod +x SilentBearing2-x86_64.AppImage`, or tick "Allow executing" in its file properties)
+  and run it. On systems without FUSE, run it with `--appimage-extract-and-run`. The plain
+  `SilentBearing2-linux-x86_64.tar.gz` build is there too.
+- **Windows:** unzip `SilentBearing2-windows-x86_64.zip` and run `SilentBearing2.exe`.
 
 You need a GPU that supports Vulkan for the full Forward+ renderer. Without Vulkan the game falls back
 to OpenGL 3 automatically.

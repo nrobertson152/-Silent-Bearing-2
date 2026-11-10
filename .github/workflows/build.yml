@@ -82,6 +82,18 @@ jobs:
           mkdir -p build/linux build/windows
           ./godot --headless --path . --export-release "Linux" build/linux/SilentBearing2.x86_64
           ./godot --headless --path . --export-release "Windows" build/windows/SilentBearing2.exe
+      - name: Build the AppImage
+        run: |
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -o appimagetool \
+            "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+          tools/make_appimage.sh build/linux/SilentBearing2.x86_64 ./godot ./appimagetool SilentBearing2-x86_64.AppImage
+      - name: Run the AppImage
+        run: |
+          APPIMAGE_EXTRACT_AND_RUN=1 ./SilentBearing2-x86_64.AppImage --headless -- --sandbox dd963 --warp 8 --smoke 30 2>&1 | tee appimage.log
+          if grep -q "SCRIPT ERROR" appimage.log || ! grep -q "SMOKE OK" appimage.log; then
+            echo "::error::The AppImage did not run a battle cleanly"; exit 1
+          fi
       - name: Package
         run: |
           cp README.md LICENSE build/linux/
@@ -96,10 +108,15 @@ jobs:
         with:
           name: SilentBearing2-windows-x86_64
           path: SilentBearing2-windows-x86_64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SilentBearing2-x86_64.AppImage
+          path: SilentBearing2-x86_64.AppImage
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            SilentBearing2-x86_64.AppImage
             SilentBearing2-linux-x86_64.tar.gz
             SilentBearing2-windows-x86_64.zip
