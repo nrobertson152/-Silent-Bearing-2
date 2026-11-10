@@ -94,6 +94,22 @@ func set_night(n: bool) -> void:
 
 
 # ------------------------------------------------------------------ per frame
+## Frames are drawn between the last two simulation steps: alpha is how far
+## (0..1) and step_dt how long a step is. The simulation runs at a fixed 30 Hz;
+## without this, ships, the camera riding them and everything else would jump
+## on step frames and stand still on the others.
+var alpha := 1.0
+var step_dt := 1.0 / 30.0
+
+
+## Called before every simulation step: where each ship was.
+func snapshot() -> void:
+	for uid in ships:
+		var r: Dictionary = ships[uid]
+		r["p0"] = r["u"].pos
+		r["h0"] = r["u"].heading
+
+
 func sync(dt: float, camera_pos: Vector3) -> void:
 	t += dt
 	cam_pos = camera_pos
@@ -125,9 +141,12 @@ func _sync_ship(r: Dictionary, dt: float) -> void:
 			r["hidden"] = true
 			r["wake_mi"].visible = false
 		return
-	var f: Vector3 = u.fwd()
+	var p0: Vector3 = r.get("p0", u.pos)
+	var h0: float = r.get("h0", u.heading)
+	var p: Vector3 = p0.lerp(u.pos, alpha)
+	var hdg: float = h0 + wrapf(u.heading - h0, -180.0, 180.0) * alpha
+	var f: Vector3 = U.fwd(hdg)
 	var side_v := Vector3(-f.z, 0, f.x)
-	var p: Vector3 = u.pos
 	var L: float = u.L
 	var B: float = u.B
 	var hb: float = ocean.height(p.x + f.x * L * 0.4, p.z + f.z * L * 0.4)
@@ -164,7 +183,7 @@ func _sync_ship(r: Dictionary, dt: float) -> void:
 		pitch += clampf(st * 0.08, 0.0, 12.0) * signf(u.trim_deg + 0.01)
 	y -= U.curvature_drop(U.flat_dist(p, cam_pos))
 	node.position = Vector3(p.x, y, p.z)
-	node.rotation = Vector3(deg_to_rad(pitch), U.yaw(u.heading), deg_to_rad(roll))
+	node.rotation = Vector3(deg_to_rad(pitch), U.yaw(hdg), deg_to_rad(roll))
 	# Turrets, launchers and recoil.
 	var mounts: Dictionary = r["mounts"]
 	for m in u.mounts:
@@ -278,7 +297,7 @@ func _sync_air(dt: float) -> void:
 			if n.visible:
 				n.visible = false
 			continue
-		var pos: Vector3 = a.pos
+		var pos: Vector3 = a.pos - a.vel * (1.0 - alpha) * step_dt
 		pos.y -= U.curvature_drop(U.flat_dist(pos, cam_pos))
 		n.position = pos
 		n.rotation = Vector3(0.0, U.yaw(a.heading), deg_to_rad(-a.bank))
@@ -318,7 +337,7 @@ func _sync_muns(dt: float) -> void:
 			rec = {"node": n}
 			mis[m.uid] = rec
 		var node: Node3D = rec["node"]
-		var pos: Vector3 = m.pos
+		var pos: Vector3 = m.pos - m.vel * (1.0 - alpha) * step_dt
 		if m.kind == "torpedo":
 			pos.y = 0.2 if m.depth < 20.0 else -40.0
 		pos.y -= U.curvature_drop(U.flat_dist(pos, cam_pos))
@@ -343,7 +362,7 @@ func _sync_muns(dt: float) -> void:
 		var len := clampf(v.length() * 0.025, 2.0, 18.0)
 		var b := Basis.looking_at(v.normalized(), Vector3.UP if absf(v.normalized().y) < 0.99 else Vector3.RIGHT)
 		b = b.scaled(Vector3(1.0 + float(s.md.get("cal", 100)) / 200.0, 1.0 + float(s.md.get("cal", 100)) / 200.0, len))
-		var pos: Vector3 = s.pos
+		var pos: Vector3 = s.pos - v * (1.0 - alpha) * step_dt
 		pos.y -= U.curvature_drop(U.flat_dist(pos, cam_pos))
 		mm.set_instance_transform(i, Transform3D(b, pos))
 

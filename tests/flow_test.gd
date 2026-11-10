@@ -158,9 +158,26 @@ func _run() -> void:
 	m._leave()
 	await frames(2)
 	check(not m.get_viewport().disable_3d, "3D drawing restored after leaving the submarine")
+	# Smooth motion: the bridge camera rides the ship exactly, and the ship moves
+	# on every frame drawn, not only on simulation steps.
+	m.start_mission(Skirmish.build("dd963", "duel", 0, 2, 3.0))
+	await frames(5)
+	var gs = m.game
+	gs.set_mode("bridge")
+	var still := 0
+	var off := 0.0
+	var last := Vector3.ZERO
+	for j in 120:
+		await process_frame
+		var shipn: Node3D = gs.view.ship_node(gs.player)
+		off = maxf(off, gs.cam.global_position.distance_to(gs.bridge.head_transform().origin))
+		if j > 10 and shipn.global_position.distance_to(last) < 1e-7:
+			still += 1
+		last = shipn.global_position
+	check(off < 0.01 and still <= 2, "bridge camera rides the ship and the ship moves every frame (offset %.3f m, %d still frames)" % [off, still])
 	# Every visual effect runs (they only fail at runtime, when something burns).
 	m.start_mission(Skirmish.build("bb61", "sag", 0, 2, 3.0))
-	await frames(3)
+	await frames(5)
 	var fx = m.game.view.fx
 	var pn: Node3D = m.game.view.ship_node(m.game.player)
 	var at: Vector3 = m.game.player.pos + Vector3(0, 5, -300)
@@ -191,6 +208,7 @@ func _run() -> void:
 			m.idx = i
 			var def: Dictionary = Campaigns.mission(s, i).duplicate(true)
 			m.start_mission(def)
+			await frames(4)
 			for j in 40:
 				m.game.w.step(0.25)
 				await process_frame
